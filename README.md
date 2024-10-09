@@ -5,7 +5,7 @@ Before running the project, make sure the following software and libraries are i
 1. OpenSSL (for SHA256 hashing)
 2. C Compiler (GCC recommended)
 
-for <b>OpenSSL installation</b>
-$sudo apt-get install libssl-dev
-To use libraries
+for <b>OpenSSL installation</b><br>
+$sudo apt-get install libssl-dev<br>
+To use libraries<br>
 -lssl -lcrypto flags are necessary when compiling your C program with OpenSSL.
