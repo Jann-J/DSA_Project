@@ -14,7 +14,7 @@ typedef struct itemInfo{
     char sender[NAME_SIZE];
     char receiver[NAME_SIZE];
     item *items;
-    size_t itemCount; //about size_t
+    size_t itemCount;//about size_t
 }itemInfo;
 
 typedef struct blockData{
@@ -39,5 +39,7 @@ typedef struct {
 
 //FUNCTION PROTOTYPES
 void init_blockchain(Blockchain *chain);
+void init_BlockData(BlockData *blockdata);
 BlockData *ReadFile(char *filename);
 void AddBlock(Blockchain *chain, BlockData *blockData);
+void printBlockchain(Blockchain chain);
