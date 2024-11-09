@@ -18,6 +18,10 @@ void init_blockchain(Blockchain *chain){
 	return;
 }
 
+void init_BlockData(BlockData *blockdata){
+	blockdata = NULL;
+	return;
+}
 /*
 * takes parameters string filename and
 *read first line of header
@@ -62,34 +66,31 @@ BlockData *ReadFile(char *filename){
 		if (token != NULL) {
 			blockData->index = strtoul(token, NULL, 10);  // Block index
 			token = strtok(NULL, ",");
-			printf("%u\n", blockData->index);
 		}
+		//timestamp
+		//if not given then pass some predefined value to function
 		if (token != NULL) {
 			blockData->nonce = strtoul(token, NULL, 10);  // Nonce
 			token = strtok(NULL, ",");
-			printf("%u\n", blockData->nonce);
 		}
 		if (token != NULL) {
 			strncpy(blockData->info.sender, token, NAME_SIZE - 1); // Sender
 			blockData->info.sender[NAME_SIZE - 1] = '\0';
 			token = strtok(NULL, ",");
-			printf("%s\n", blockData->info.sender);
 		}
 		if (token != NULL) {
 			strncpy(blockData->info.receiver, token, NAME_SIZE - 1); // Receiver
 			blockData->info.receiver[NAME_SIZE - 1] = '\0';
 			token = strtok(NULL, ",");
-			printf("%s\n", blockData->info.receiver);
 		}
 		if (token != NULL) {
 			blockData->info.itemCount = strtoul(token, NULL, 10);  // Number of items
-			printf("%zu\n", blockData->info.itemCount);
 			token = strtok(NULL, ",");
 		}
 		
 	}
 	
-	 // Allocate memory for items
+	// Allocate memory for items
         blockData->info.items = (item *)malloc(blockData->info.itemCount * sizeof(item));
 	if (blockData->info.items == NULL) {
 		fprintf(stderr, "Memory allocation error for items!\n");
@@ -137,15 +138,39 @@ void AddBlock(Blockchain *chain, BlockData *blockData){
 	
 	chain->rear->next = newBlock;
 	chain->rear = newBlock;
+	return;
 }
 
-//void newBlock(Blockchain *b, )
-
-//print block
-
-//print blockchain
-
-/* test cases
-* if file info is incomplete print an error
-* 
-*/
+void printBlockchain(Blockchain chain){
+	if (chain.head == NULL)
+		return;
+	
+	int i;
+	block *current = chain.head;
+	while (current != NULL) {
+		printf("Block Index: %u", current->data.index);
+		if(current->data.index == 1){
+			printf(", Genesis Block");
+		}
+		putchar('\n');
+		printf("Timestamp: %s\n", ctime(&current->data.timestamp)); // Human-readable time
+		//prev_hash
+		//next_hash
+		//merkle_root_hash
+		
+		printf("\nItem Information:\n");
+		printf("Sender: %s \nReciever: %s\n", current->data.info.sender, current->data.info.receiver);
+		printf("Number of Items: %zu\n", current->data.info.itemCount);
+		
+		i = 0;
+		printf("\n%-20s %-15s %s\n", "Item Name", "Amount", "Quantity");
+		while(i < current->data.info.itemCount){
+			printf("%-20s %-15u %f\n", current->data.info.items[i].itemName,
+							current->data.info.items[i].quantity,
+							current->data.info.items[i].amount);
+			i++;
+		}
+		current = current->next;
+	}
+	return;
+}
