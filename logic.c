@@ -8,12 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <stdint.h>
-
-#define NAME_SIZE 50
-#define MAX_LINE 128
-#define SHA256_DIGEST_LENGTH 32
 
 #include"header.h"
 
@@ -127,14 +121,23 @@ BlockData *ReadFile(char *filename){
 }
 
 void AddBlock(Blockchain *chain, BlockData *blockData){
-    
+	block *newBlock = (block *)malloc(sizeof(block));
+	if(newBlock == NULL){
+		//message for error;
+		return;
+	}
+	
+	newBlock->data = *blockData;
+	newBlock->next = NULL;
+	if(chain->head == NULL){// genesis block
+		chain->head = newBlock;
+		chain->rear = newBlock;
+		return;
+	}
+	
+	chain->rear->next = newBlock;
+	chain->rear = newBlock;
 }
-
-/*function reads from file given
-*stores it in data structure and prev hash
-*it then calles for hash function and merkleroot
-* fills it in the block
-*/
 
 //void newBlock(Blockchain *b, )
 

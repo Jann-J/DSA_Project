@@ -1,3 +1,9 @@
+#include <stdint.h>
+#include <time.h>
+#define NAME_SIZE 50
+#define MAX_LINE 128
+#define SHA256_DIGEST_LENGTH 32
+
 typedef struct item{
     char itemName[NAME_SIZE]; //define later
     uint32_t quantity;
