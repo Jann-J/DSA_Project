@@ -43,3 +43,8 @@ void init_BlockData(BlockData *blockdata);
 BlockData *ReadFile(char *filename);
 void AddBlock(Blockchain *chain, BlockData *blockData);
 void printBlockchain(Blockchain chain);
+void freeBlockchain(Blockchain *chain);
+void printBlock(Blockchain chain, int index);//based off index
+
+
+unsigned char *create_sha256(const unsigned char str[]);
