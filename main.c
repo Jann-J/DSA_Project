@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include"header.h"
+#define FILE_NAME_SIZE 16
 
 void displayMenu() {
 	printf("\n==================== Blockchain Supply Chain Management ====================\n\n");
@@ -22,10 +23,12 @@ void displayMenu() {
 }
 
 int main(){
-	int choice;
+	int choice, index;
 	char subChoice;
+	char filename[FILE_NAME_SIZE];
 	
 	Blockchain chain;
+	init_blockchain(&chain);
 	while(1){
 		displayMenu();
 		printf("\nEnter your choice: ");
@@ -34,6 +37,11 @@ int main(){
 		switch(choice){
 			case 1:
 				printf("Option 1: Add a New Block from CSV File selected.\n");
+				printf("Enter .csv filename for adding the block: ");
+				scanf("%s", filename);
+				if(ReadFile(filename) == NULL)
+					break;
+				AddBlock(&chain, (ReadFile(filename)));
 				break;
 			case 2:
 				printf("Option 2: View Blockchain selected.\n");
@@ -66,6 +74,9 @@ int main(){
 				break;
 			case 6:
 				printf("Option 6: Display Block Details selected.\n");
+				printf("Enter Index of block to be displayed: ");
+				scanf("%d", &index);
+				printBlock(chain, index);
 				break;
 			case 7:
 				printf("Option 7: Export Blockchain Data to CSV selected.\n");
@@ -91,6 +102,7 @@ int main(){
 				break;
 			case 10:
 				printf("Exiting the program. Goodbye!\n");
+				freeBlockchain(&chain);
 				return 0;
 			default:
 				printf("Invalid choice. Please enter a number between 1 and 10.\n");

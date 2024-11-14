@@ -43,6 +43,7 @@ void init_BlockData(BlockData *blockdata);
 BlockData *ReadFile(char *filename);
 void AddBlock(Blockchain *chain, BlockData *blockData);
 void printBlockchain(Blockchain chain);
+void addInfoToBlock(BlockData *blockData);
 void freeBlockchain(Blockchain *chain);
 void printBlock(Blockchain chain, int index);//based off index
 
