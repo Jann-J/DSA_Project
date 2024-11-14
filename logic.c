@@ -203,7 +203,6 @@ void AddBlock(Blockchain *chain, BlockData *blockData){
 		printf("Block added successfully.\n");
 		return;
 	}
-	printf("hey3\n");
 	chain->rear->next = newBlock;
 	chain->rear = newBlock;
 	printf("Block added successfully.\n");
