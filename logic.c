@@ -5,10 +5,10 @@
 * create a copy of it before calling strtok().
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<time.h>
 #include"header.h"
 
 //Initialises Blockchain
@@ -18,17 +18,12 @@ void init_blockchain(Blockchain *chain){
 	return;
 }
 
-void init_BlockData(BlockData *blockdata){
-	blockdata = NULL;
-	return;
-}
-/*
-* takes parameters string filename and
-*read first line of header
-*stored second line for index, time, nonce, sender, reciever, itemcount in struct
-*stored item information like itemname, amount, quantity in struct
-*returns the struct BlockData read from file
-*/
+
+/* takes parameters string filename and
+* read first line of header
+* stored second line for index, time, nonce, sender, reciever, itemcount in struct
+* stored item information like itemname, amount, quantity in struct
+* returns the struct BlockData read from file */
 BlockData *ReadFile(char *filename){
 	FILE *fp = fopen(filename, "r");
 	if(fp == NULL){
@@ -66,31 +61,34 @@ BlockData *ReadFile(char *filename){
 		if (token != NULL) {
 			blockData->index = strtoul(token, NULL, 10);  // Block index
 			token = strtok(NULL, ",");
+			printf("%u\n", blockData->index);
 		}
-		//timestamp
-		//if not given then pass some predefined value to function
-		if (token != NULL) {
+		/*if (token != NULL) {
 			blockData->nonce = strtoul(token, NULL, 10);  // Nonce
 			token = strtok(NULL, ",");
-		}
+			printf("%u\n", blockData->nonce);
+		}*/
 		if (token != NULL) {
 			strncpy(blockData->info.sender, token, NAME_SIZE - 1); // Sender
 			blockData->info.sender[NAME_SIZE - 1] = '\0';
 			token = strtok(NULL, ",");
+			printf("%s\n", blockData->info.sender);
 		}
 		if (token != NULL) {
 			strncpy(blockData->info.receiver, token, NAME_SIZE - 1); // Receiver
 			blockData->info.receiver[NAME_SIZE - 1] = '\0';
 			token = strtok(NULL, ",");
+			printf("%s\n", blockData->info.receiver);
 		}
 		if (token != NULL) {
 			blockData->info.itemCount = strtoul(token, NULL, 10);  // Number of items
+			printf("%zu\n", blockData->info.itemCount);
 			token = strtok(NULL, ",");
 		}
 		
 	}
 	
-	// Allocate memory for items
+	 // Allocate memory for items
         blockData->info.items = (item *)malloc(blockData->info.itemCount * sizeof(item));
 	if (blockData->info.items == NULL) {
 		fprintf(stderr, "Memory allocation error for items!\n");
@@ -138,39 +136,131 @@ void AddBlock(Blockchain *chain, BlockData *blockData){
 	
 	chain->rear->next = newBlock;
 	chain->rear = newBlock;
+}
+
+void printBlock(Blockchain chain, int index){
+		block *current = chain.head;
+		while(current != NULL && index != current->head.index)
+			current = curren->next;
+			
+		if (current == NULL) {
+			printf("Block with index %d not found.\n", index);
+			return;
+		}
+		// Retrieve the data for the block
+		BlockData data = current->data;		
+		
+		// Print Index
+		printf("Block Index: %u\n", data.index);
+		
+		// Print time
+		printf("Timestamp: ");
+		printTimestamp(data.timestamp);
+		printf("\n");
+
+		// Print sender and receiver
+		printf("Sender: %s\n", data.info.sender);
+		printf("Receiver: %s\n", data.info.receiver);
+
+		// Print item details
+		printf("Items:\n");
+			for (size_t i = 0; i < data.info.itemCount; i++) {
+			printf("  Item Name: %s\n", data.info.items[i].itemName);
+			printf("  Quantity: %u\n", data.info.items[i].quantity);
+			printf("  Amount: %.2f\n", data.info.items[i].amount);
+		}
+		
+		// Print hash details
+		printf("Previous Hash: ");
+		printHash(data.prevHash, SHA256_DIGEST_LENGTH);
+		printf("\n");
+
+		printf("Current Hash: ");
+		printHash(data.currHash, SHA256_DIGEST_LENGTH);
+		printf("\n");
+
+		printf("Merkle Root: ");
+		printHash(data.merkleRoot, SHA256_DIGEST_LENGTH);
+		printf("\n");
+		
+		// Print nonce
+		printf("Nonce: %u\n", data.nonce);
+		return;
+	
+}
+
+void printTimestamp(time_t timestamp) {
+	struct tm *tm_info = localtime(&timestamp);
+	char buffer[26];
+	strftime(buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+	printf("%s", buffer);
 	return;
 }
 
 void printBlockchain(Blockchain chain){
-	if (chain.head == NULL)
-		return;
-	
-	int i;
-	block *current = chain.head;
+	block *current = chain.head; // Start from the head of the blockchain
+
+	printf("=========== Blockchain ===========\n\n");
 	while (current != NULL) {
-		printf("Block Index: %u", current->data.index);
-		if(current->data.index == 1){
-			printf(", Genesis Block");
-		}
-		putchar('\n');
-		printf("Timestamp: %s\n", ctime(&current->data.timestamp)); // Human-readable time
-		//prev_hash
-		//next_hash
-		//merkle_root_hash
+		BlockData data = current->data;
 		
-		printf("\nItem Information:\n");
-		printf("Sender: %s \nReciever: %s\n", current->data.info.sender, current->data.info.receiver);
-		printf("Number of Items: %zu\n", current->data.info.itemCount);
+		// Print Index
+		printf("Block Index: %u\n", data.index);
 		
-		i = 0;
-		printf("\n%-20s %-15s %s\n", "Item Name", "Amount", "Quantity");
-		while(i < current->data.info.itemCount){
-			printf("%-20s %-15u %f\n", current->data.info.items[i].itemName,
-							current->data.info.items[i].quantity,
-							current->data.info.items[i].amount);
-			i++;
+		// Print time
+		printf("Timestamp: ");
+		printTimestamp(data.timestamp);
+		printf("\n");
+
+		// Print sender and receiver
+		printf("Sender: %s\n", data.info.sender);
+		printf("Receiver: %s\n", data.info.receiver);
+
+		// Print item details
+		printf("Items:\n");
+			for (size_t i = 0; i < data.info.itemCount; i++) {
+			printf("  Item Name: %s\n", data.info.items[i].itemName);
+			printf("  Quantity: %u\n", data.info.items[i].quantity);
+			printf("  Amount: %.2f\n", data.info.items[i].amount);
 		}
+		
+		// Print hash details
+		printf("Previous Hash: ");
+		printHash(data.prevHash, SHA256_DIGEST_LENGTH);
+		printf("\n");
+
+		printf("Current Hash: ");
+		printHash(data.currHash, SHA256_DIGEST_LENGTH);
+		printf("\n");
+
+		printf("Merkle Root: ");
+		printHash(data.merkleRoot, SHA256_DIGEST_LENGTH);
+		printf("\n");
+		
+		// Print nonce
+		printf("Nonce: %u\n", data.nonce);
+		printf("----------------------------------\n\n");
+
 		current = current->next;
 	}
+	return;
+}
+
+void freeBlockchain(Blockchain *chain) {
+	block *current = chain->head;
+	while (current != NULL) {
+		block *nextBlock = current->next;
+
+		// Free items in BlockData
+		if (current->data.info.items != NULL)
+			free(current->data.info.items);
+        
+		// Free the block itself
+		free(current);
+		current = nextBlock;
+	}
+    
+	chain->head = NULL;
+	chain->rear = NULL;
 	return;
 }
