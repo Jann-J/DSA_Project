@@ -38,6 +38,7 @@ typedef struct {
 }Blockchain;
 
 //FUNCTION PROTOTYPES
+//Block Add Edit Print
 void init_blockchain(Blockchain *chain);
 void init_BlockData(BlockData *blockdata);
 BlockData *ReadFile(char *filename);
@@ -46,6 +47,13 @@ void printBlockchain(Blockchain chain);
 void addInfoToBlock(BlockData *blockData);
 void freeBlockchain(Blockchain *chain);
 void printBlock(Blockchain chain, int index);//based off index
+void EditBlock(Blockchain chain, char *filename);
 
+//SHA256
+void computeSHA256(const char *data, unsigned char *hash);
+void printHash(unsigned char *hash);
 
-unsigned char *create_sha256(const unsigned char str[]);
+//Merkle Root Generation
+unsigned char **createLeaves(item *items, size_t itemCount);
+unsigned char *combineHashes(unsigned char *hash1, unsigned char *hash2);
+unsigned char **buildParentHashes(unsigned char **hashes, size_t numHashes, size_t *newHashCount);
