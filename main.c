@@ -86,6 +86,10 @@ int main(){
 				break;
 			case 9:
 				printf("Option 9: Network Options selected.\n");
+				char blockname[FILE_NAME_SIZE];
+				printf("Enter block name: ");
+				scanf("%s", blockname);
+				P2P_NetworkConnection(blockname);
 				printf("   Enter sub-choice (a/b): ");
 				scanf(" %c", &subChoice); // Note the space before %c to handle newline characters
 				switch(subChoice){
