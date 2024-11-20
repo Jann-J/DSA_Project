@@ -1,84 +1,94 @@
-/* strtok() is destructive, meaning it changes the 
-* input string by inserting null characters (\0).
-* If you need the original row after tokenization,
-* create a copy of it before calling strtok(). */
+/* strtok() is destructive, meaning it changes the
+ * input string by inserting null characters (\0).
+ * If you need the original row after tokenization,
+ * create a copy of it before calling strtok(). */
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<time.h>
-#include"header.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "header.h"
 
 /* Initialises Blockchain */
-void init_blockchain(Blockchain *chain){
+void init_blockchain(Blockchain *chain)
+{
 	chain->head = NULL;
 	chain->rear = NULL;
 	return;
 }
 
-
 /* takes parameters string filename and
-* read first line of header
-* stored second line for index, time, nonce, sender, reciever, itemcount in struct
-* stored item information like itemname, amount, quantity in struct
-* returns the struct BlockData read from file */
-BlockData *ReadFile(char *filename){
+ * read first line of header
+ * stored second line for index, time, nonce, sender, reciever, itemcount in struct
+ * stored item information like itemname, amount, quantity in struct
+ * returns the struct BlockData read from file */
+BlockData *ReadFile(char *filename)
+{
 	FILE *fp = fopen(filename, "r");
-	if(fp == NULL){
+	if (fp == NULL)
+	{
 		perror("Error: Unable to open file. Please check if the file exists.\n\n");
 		return NULL;
 	}
-	
+
 	char row[MAX_LINE], *token, ch;
 	int i, itemIndex = 0;
-	
-	//Error in block data
+
+	// Error in block data
 	BlockData *blockData = (BlockData *)malloc(sizeof(BlockData));
-	if (blockData == NULL){
+	if (blockData == NULL)
+	{
 		fprintf(stderr, "Error: Memory allocation failed for blockData.\n");
 		fclose(fp);
-	return NULL;
+		return NULL;
 	}
-	
-	//here title row is just read
-	while((ch = fgetc(fp)) != '\n');
-	//insufficient data in title row
-	if (ch == EOF) {
+
+	// here title row is just read
+	while ((ch = fgetc(fp)) != '\n')
+		;
+	// insufficient data in title row
+	if (ch == EOF)
+	{
 		fprintf(stderr, "Error: File does not contain sufficient data.\n");
 		free(blockData);
 		fclose(fp);
 		return NULL;
 	}
-	
-	//reading initial info of block
+
+	// reading initial info of block
 	i = 0;
-	while ((ch = fgetc(fp)) != '\n' && ch != EOF) {
-		if (i < MAX_LINE - 1){
+	while ((ch = fgetc(fp)) != '\n' && ch != EOF)
+	{
+		if (i < MAX_LINE - 1)
+		{
 			row[i] = ch;
 			i++;
 		}
 	}
-	//insufficient data in second row
-	if (ch == EOF && i == 0) {
+	// insufficient data in second row
+	if (ch == EOF && i == 0)
+	{
 		fprintf(stderr, "Error: File does not contain sufficient data for block information.\n");
 		free(blockData);
 		fclose(fp);
 		return NULL;
 	}
 	row[i] = '\0';
-	
-	//Parsing block data
+
+	// Parsing block data
 	token = strtok(row, ",");
-	if (token == NULL) {
+	if (token == NULL)
+	{
 		fprintf(stderr, "Error: Insufficient block data in the file.\n");
 		free(blockData);
 		fclose(fp);
 		return NULL;
 	}
-	blockData->index = strtoul(token, NULL, 10);  // Block index
-		
+	blockData->index = strtoul(token, NULL, 10); // Block index
+
 	token = strtok(NULL, ",");
-	if (token == NULL) {
+	if (token == NULL)
+	{
 		fprintf(stderr, "Error: Insufficient block data(missing sender) in the file.\n");
 		free(blockData);
 		fclose(fp);
@@ -86,9 +96,10 @@ BlockData *ReadFile(char *filename){
 	}
 	strncpy(blockData->info.sender, token, NAME_SIZE - 1); // Sender
 	blockData->info.sender[NAME_SIZE - 1] = '\0';
-		
+
 	token = strtok(NULL, ",");
-	if (token == NULL) {
+	if (token == NULL)
+	{
 		fprintf(stderr, "Error: Insufficient block data(missing receiver) in the file.\n");
 		free(blockData);
 		fclose(fp);
@@ -96,35 +107,40 @@ BlockData *ReadFile(char *filename){
 	}
 	strncpy(blockData->info.receiver, token, NAME_SIZE - 1); // Receiver
 	blockData->info.receiver[NAME_SIZE - 1] = '\0';
-		
+
 	token = strtok(NULL, ",");
-	if (token == NULL) {
+	if (token == NULL)
+	{
 		fprintf(stderr, "Error: Insufficient block data(missing item number in the file.\n");
 		free(blockData);
 		fclose(fp);
 		return NULL;
 	}
-	blockData->info.itemCount = strtoul(token, NULL, 10);  // Number of items
-	if (blockData->info.itemCount == 0) {
+	blockData->info.itemCount = strtoul(token, NULL, 10); // Number of items
+	if (blockData->info.itemCount == 0)
+	{
 		fprintf(stderr, "Error: Item count must be greater than zero.\n");
 		free(blockData);
 		fclose(fp);
 		return NULL;
 	}
-	
+
 	// Allocate memory for items
-        blockData->info.items = (item *)malloc(blockData->info.itemCount * sizeof(item));
-	if (blockData->info.items == NULL) {
+	blockData->info.items = (item *)malloc(blockData->info.itemCount * sizeof(item));
+	if (blockData->info.items == NULL)
+	{
 		fprintf(stderr, "Memory allocation failed for items.\n");
 		free(blockData);
 		fclose(fp);
 		return NULL;
 	}
-	
+
 	// Read item details
-        while (itemIndex < blockData->info.itemCount && fgets(row, MAX_LINE, fp) != NULL) {
+	while (itemIndex < blockData->info.itemCount && fgets(row, MAX_LINE, fp) != NULL)
+	{
 		token = strtok(row, ",");
-		if (token == NULL) {
+		if (token == NULL)
+		{
 			fprintf(stderr, "Error: Insufficient item data (missing item name) at Index: %d\n", itemIndex);
 			free(blockData->info.items);
 			free(blockData);
@@ -133,46 +149,50 @@ BlockData *ReadFile(char *filename){
 		}
 		strncpy(blockData->info.items[itemIndex].itemName, token, NAME_SIZE - 1);
 		blockData->info.items[itemIndex].itemName[NAME_SIZE - 1] = '\0'; // itemName
-		
+
 		token = strtok(NULL, ",");
-		if (token == NULL) {
+		if (token == NULL)
+		{
 			fprintf(stderr, "Error: Insufficient item data (missing item name) at Index: %d\n", itemIndex);
 			free(blockData->info.items);
 			free(blockData);
 			fclose(fp);
 			return NULL;
 		}
-                blockData->info.items[itemIndex].quantity = strtoul(token, NULL, 10); //itemQuantity
-                
+		blockData->info.items[itemIndex].quantity = strtoul(token, NULL, 10); // itemQuantity
+
 		token = strtok(NULL, ",");
-		if (token == NULL) {
+		if (token == NULL)
+		{
 			fprintf(stderr, "Error: Insufficient item data (missing item name) at Index: %d\n", itemIndex);
 			free(blockData->info.items);
 			free(blockData);
 			fclose(fp);
 			return NULL;
 		}
-                blockData->info.items[itemIndex].amount = strtof(token, NULL); //itemAmount
-                itemIndex++;
-        }
-        
-        // Error in item count
-        if(itemIndex < blockData->info.itemCount){
+		blockData->info.items[itemIndex].amount = strtof(token, NULL); // itemAmount
+		itemIndex++;
+	}
+
+	// Error in item count
+	if (itemIndex < blockData->info.itemCount)
+	{
 		fprintf(stderr, "Error: File does not contain enough item details.\n");
 		free(blockData->info.items);
 		free(blockData);
 		fclose(fp);
 		return NULL;
 	}
-        
+
 	fclose(fp);
 	return blockData;
 }
 
 /* Adds calculated data to BlockData like
-* timestamp, prevHash, currHash, merkleRoot
-* and nonce */
-void addInfoToBlock(BlockData *blockData){
+ * timestamp, prevHash, currHash, merkleRoot
+ * and nonce */
+void addInfoToBlock(BlockData *blockData)
+{
 	// Set the timestamp to the current time
 	blockData->timestamp = time(NULL);
 
@@ -185,19 +205,22 @@ void addInfoToBlock(BlockData *blockData){
 }
 
 /* Adds block in blockchain
-* later add check for no repeated block*/
-void AddBlock(Blockchain *chain, BlockData *blockData){
+ * later add check for no repeated block*/
+void AddBlock(Blockchain *chain, BlockData *blockData)
+{
 	block *newBlock = (block *)malloc(sizeof(block));
-	if(newBlock == NULL){
+	if (newBlock == NULL)
+	{
 		perror("Error: Memory allocation failed.\n");
 		return;
 	}
-	
+
 	newBlock->data = *blockData;
 	newBlock->next = NULL;
 	addInfoToBlock(blockData);
 	// Genesis block
-	if(chain->head == NULL){
+	if (chain->head == NULL)
+	{
 		chain->head = newBlock;
 		chain->rear = newBlock;
 		printf("Block added successfully.\n");
@@ -209,7 +232,8 @@ void AddBlock(Blockchain *chain, BlockData *blockData){
 	return;
 }
 
-void printTimestamp(time_t timestamp) {
+void printTimestamp(time_t timestamp)
+{
 	struct tm *tm_info = localtime(&timestamp);
 	char buffer[26];
 	strftime(buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
@@ -217,76 +241,82 @@ void printTimestamp(time_t timestamp) {
 	return;
 }
 
-void printHash(unsigned char *hash, size_t length) {
-    for (size_t i = 0; i < length; i++) {
-        printf("%02x", hash[i]);
-    }
+void printHash(unsigned char *hash, size_t length)
+{
+	for (size_t i = 0; i < length; i++)
+	{
+		printf("%02x", hash[i]);
+	}
 }
 
 /* Prints block based off index*/
-void printBlock(Blockchain chain, int index){
-		block *current = chain.head;
-		while(current != NULL && index != current->data.index)
-			current = current->next;
-			
-		if (current == NULL) {
-			printf("\nBlock with index %d not found.\n", index);
-			return;
-		}
-		// Retrieve the data for the block
-		BlockData data = current->data;		
-		
-		// Print Index
-		printf("Block Index: %u\n", data.index);
-		
-		// Print time
-		printf("Timestamp: ");
-		printTimestamp(data.timestamp);
-		printf("\n");
+void printBlock(Blockchain chain, int index)
+{
+	block *current = chain.head;
+	while (current != NULL && index != current->data.index)
+		current = current->next;
 
-		// Print sender and receiver
-		printf("Sender: %s\n", data.info.sender);
-		printf("Receiver: %s\n", data.info.receiver);
-
-		// Print item details
-		printf("Items:\n");
-		for (int i = 0; i < data.info.itemCount; i++) {
-			printf("\tItem Name [%d]: %s\n", i, data.info.items[i].itemName);
-			printf("\tQuantity [%d]: %u\n", i, data.info.items[i].quantity);
-			printf("\tAmount [%d]: %.2f\n", i, data.info.items[i].amount);
-			putchar('\n');
-		}
-		
-		// Print hash details
-		printf("Previous Hash: ");
-		printHash(data.prevHash, SHA256_DIGEST_LENGTH);
-		printf("\n");
-
-		printf("Current Hash: ");
-		printHash(data.currHash, SHA256_DIGEST_LENGTH);
-		printf("\n");
-
-		printf("Merkle Root: ");
-		printHash(data.merkleRoot, SHA256_DIGEST_LENGTH);
-		printf("\n");
-		
-		// Print nonce
-		printf("Nonce: %u\n", data.nonce);
+	if (current == NULL)
+	{
+		printf("\nBlock with index %d not found.\n", index);
 		return;
-	
+	}
+	// Retrieve the data for the block
+	BlockData data = current->data;
+
+	// Print Index
+	printf("Block Index: %u\n", data.index);
+
+	// Print time
+	printf("Timestamp: ");
+	printTimestamp(data.timestamp);
+	printf("\n");
+
+	// Print sender and receiver
+	printf("Sender: %s\n", data.info.sender);
+	printf("Receiver: %s\n", data.info.receiver);
+
+	// Print item details
+	printf("Items:\n");
+	for (int i = 0; i < data.info.itemCount; i++)
+	{
+		printf("\tItem Name [%d]: %s\n", i, data.info.items[i].itemName);
+		printf("\tQuantity [%d]: %u\n", i, data.info.items[i].quantity);
+		printf("\tAmount [%d]: %.2f\n", i, data.info.items[i].amount);
+		putchar('\n');
+	}
+
+	// Print hash details
+	printf("Previous Hash: ");
+	printHash(data.prevHash, SHA256_DIGEST_LENGTH);
+	printf("\n");
+
+	printf("Current Hash: ");
+	printHash(data.currHash, SHA256_DIGEST_LENGTH);
+	printf("\n");
+
+	printf("Merkle Root: ");
+	printHash(data.merkleRoot, SHA256_DIGEST_LENGTH);
+	printf("\n");
+
+	// Print nonce
+	printf("Nonce: %u\n", data.nonce);
+	return;
 }
 
 /* Prints whole Blockchain*/
-void printBlockchain(Blockchain chain){
+void printBlockchain(Blockchain chain)
+{
 	block *current = chain.head; // Start from the head of the blockchain
 
 	printf("=========== Blockchain ===========\n\n");
-	while (current != NULL) {
+	while (current != NULL)
+	{
 		BlockData data = current->data;
-		
+
 		// Print Index
 		printf("Block Index: %u\n", data.index);
-		
+
 		// Print time
 		printf("Timestamp: ");
 		printTimestamp(data.timestamp);
@@ -297,13 +327,14 @@ void printBlockchain(Blockchain chain){
 		printf("Receiver: %s\n", data.info.receiver);
 
 		// Print item details
-		for (int i = 0; i < data.info.itemCount; i++) {
+		for (int i = 0; i < data.info.itemCount; i++)
+		{
 			printf("\tItem Name [%d]: %s\n", i, data.info.items[i].itemName);
 			printf("\tQuantity [%d]: %u\n", i, data.info.items[i].quantity);
 			printf("\tAmount [%d]: %.2f\n", i, data.info.items[i].amount);
 			putchar('\n');
 		}
-		
+
 		// Print hash details
 		printf("Previous Hash: ");
 		printHash(data.prevHash, SHA256_DIGEST_LENGTH);
@@ -316,7 +347,7 @@ void printBlockchain(Blockchain chain){
 		printf("Merkle Root: ");
 		printHash(data.merkleRoot, SHA256_DIGEST_LENGTH);
 		printf("\n");
-		
+
 		// Print nonce
 		printf("Nonce: %u\n", data.nonce);
 		printf("----------------------------------\n\n");
@@ -327,21 +358,106 @@ void printBlockchain(Blockchain chain){
 }
 
 /* Frees Blockchain after program is completed*/
-void freeBlockchain(Blockchain *chain) {
+void freeBlockchain(Blockchain *chain)
+{
 	block *current = chain->head;
-	while (current != NULL) {
+	while (current != NULL)
+	{
 		block *nextBlock = current->next;
 
 		// Free items in BlockData
 		if (current->data.info.items != NULL)
 			free(current->data.info.items);
-        
+
 		// Free the block itself
 		free(current);
 		current = nextBlock;
 	}
-    
+
 	chain->head = NULL;
 	chain->rear = NULL;
 	return;
+}
+
+// hash function
+uint32_t sbj4_hash(char *key)
+{
+    int len = strlen(key);
+    char value[3];
+    value[0] = key[len - 2], value[1] = key[len - 1], value[2] = '\0';
+    int combined = atoi(value);
+    return combined;
+}
+
+// Create Hash Table to store wallet balance
+void InitWalletSorage(Wallet_Storage *W, int total)
+{
+	W->wallets = (int *)malloc(total * sizeof(total));
+	W->size = total;
+	return;
+}
+
+char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004", "public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008", "public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012", "public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016", "public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020"};
+int TOTAL_NODES_IN_BLOCKCHAIN = 20;
+
+void CreatesNodesWithRandomBalance()
+{
+	Wallet_Storage* W = (Wallet_Storage*)malloc(sizeof(Wallet_Storage));
+	InitWalletSorage(W, TOTAL_NODES_IN_BLOCKCHAIN);
+	return;
+}
+
+// validate transaction
+itemInfo *InputTransactionData()
+{
+	itemInfo *newtx = (itemInfo *)malloc(sizeof(itemInfo));
+	if (newtx == NULL)
+	{
+		printf("Memory allocation failed!\n");
+		return NULL;
+	}
+
+	printf("Enter sender's name: ");
+	fgets(newtx->sender, NAME_SIZE, stdin);
+	newtx->sender[strcspn(newtx->sender, "\n")] = '\0';
+
+	printf("Enter receiver's name: ");
+	fgets(newtx->receiver, NAME_SIZE, stdin);
+	newtx->receiver[strcspn(newtx->receiver, "\n")] = '\0';
+
+	printf("Enter the number of items: ");
+	if (scanf("%zu", &newtx->itemCount) != 1 || newtx->itemCount == 0)
+	{
+		printf("Invalid item count.\n");
+		free(newtx);
+		return NULL;
+	}
+
+	// Allocate memory for the items array
+	newtx->items = (item *)malloc(newtx->itemCount * sizeof(item));
+	if (newtx->items == NULL)
+	{
+		printf("Memory allocation for items failed!\n");
+		free(newtx);
+		return NULL;
+	}
+
+	// Input each item's details
+	for (size_t i = 0; i < newtx->itemCount; i++)
+	{
+		printf("\nItem %zu:\n", i + 1);
+		printf("Enter item name: ");
+		while (getchar() != '\n')
+			; // Clear buffer
+		fgets(newtx->items[i].itemName, NAME_SIZE, stdin);
+		newtx->items[i].itemName[strcspn(newtx->items[i].itemName, "\n")] = '\0';
+
+		printf("Enter quantity: ");
+		scanf("%d", &newtx->items[i].quantity);
+
+		printf("Enter price: ");
+		scanf("%f", &newtx->items[i].amount);
+	}
+
+	return newtx;
 }

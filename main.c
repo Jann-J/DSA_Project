@@ -18,6 +18,7 @@ void displayMenu() {
 	printf("9. Network Options\n");
 		printf("   a. Share Block via P2P Network\n");
 		printf("   b. Receive Block from P2P Network\n");
+	printf("11. Make a transaction\n");
 	printf("10. Exit\n");
 	printf("\n===========================================================================\n");
 }
@@ -108,6 +109,11 @@ int main(){
 				printf("Exiting the program. Goodbye!\n");
 				freeBlockchain(&chain);
 				return 0;
+			case 11:
+				CreatesNodesWithRandomBalance();
+				itemInfo *newtx = InputTransactionData();
+				// ValidateTransactionData(newtx);
+
 			default:
 				printf("Invalid choice. Please enter a number between 1 and 10.\n");
 				break;

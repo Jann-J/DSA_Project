@@ -62,6 +62,12 @@ typedef struct ThreadArguments
     char *blockname;
 } ThreadArguments;
 
+// Hash Table For Faster Transaction Validation
+typedef struct Wallet_Storage
+{
+    int *wallets, size;
+}Wallet_Storage;
+
 // FUNCTION PROTOTYPES
 // Block Add Edit Print
 void init_blockchain(Blockchain *chain);
@@ -88,3 +94,7 @@ int P2P_NetworkConnection(char *blockname);
 void sending();
 void receiving(int server_fd, char *blockname);
 void *receive_thread(void *server_fd);
+
+// hashtable for Transaction Validation
+void CreatesNodesWithRandomBalance();
+itemInfo *InputTransactionData();
