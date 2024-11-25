@@ -4,6 +4,8 @@
 #define NAME_SIZE 50
 #define MAX_LINE 128
 #define SHA256_DIGEST_LENGTH 32
+#define PUBLIC_ID_SIZE 32
+#define TOTAL_NODES_IN_BLOCKCHAIN 20
 
 // networking
 #include <unistd.h>
@@ -63,10 +65,21 @@ typedef struct ThreadArguments
 } ThreadArguments;
 
 // Hash Table For Faster Transaction Validation
-typedef struct Wallet_Storage
+
+typedef struct txInfo
 {
-    int *wallets, size;
-}Wallet_Storage;
+    char id[PUBLIC_ID_SIZE];
+    char sender[NAME_SIZE];
+    char receiver[NAME_SIZE];
+    item *items;
+    size_t itemCount; // about size_t
+} txInfo;
+
+typedef struct WalletStorage
+{
+    char *id;
+    int balance;
+}WalletStorage[TOTAL_NODES_IN_BLOCKCHAIN];
 
 // FUNCTION PROTOTYPES
 // Block Add Edit Print
@@ -96,5 +109,6 @@ void receiving(int server_fd, char *blockname);
 void *receive_thread(void *server_fd);
 
 // hashtable for Transaction Validation
-void CreatesNodesWithRandomBalance();
-itemInfo *InputTransactionData();
+WalletStorage* CreatesNodesWithRandomBalance();
+txInfo *InputTransactionData();
+int ValidateTransactionData(txInfo* newtx, WalletStorage *WalletBank);

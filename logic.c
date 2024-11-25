@@ -382,50 +382,57 @@ void freeBlockchain(Blockchain *chain)
 // hash function
 uint32_t sbj4_hash(char *key)
 {
-    int len = strlen(key);
-    char value[3];
-    value[0] = key[len - 2], value[1] = key[len - 1], value[2] = '\0';
-    int combined = atoi(value);
-    return combined;
+	int len = strlen(key);
+	char value[3];
+	value[0] = key[len - 2], value[1] = key[len - 1], value[2] = '\0';
+	int combined = atoi(value);
+	return combined;
 }
 
 // Create Hash Table to store wallet balance
-void InitWalletSorage(Wallet_Storage *W, int total)
+void InitWalletSorage(WalletStorage *W, int total)
 {
-	W->wallets = (int *)malloc(total * sizeof(total));
-	W->size = total;
+	W = (WalletStorage *)malloc(sizeof(WalletStorage));
 	return;
 }
 
 char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004", "public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008", "public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012", "public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016", "public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020"};
-int TOTAL_NODES_IN_BLOCKCHAIN = 20;
 
-void CreatesNodesWithRandomBalance()
+WalletStorage* CreatesNodesWithRandomBalance()
 {
-	Wallet_Storage* W = (Wallet_Storage*)malloc(sizeof(Wallet_Storage));
+	WalletStorage *W = (WalletStorage *)malloc(sizeof(WalletStorage));
 	InitWalletSorage(W, TOTAL_NODES_IN_BLOCKCHAIN);
-	return;
+
+	for (int i = 0; i < TOTAL_NODES_IN_BLOCKCHAIN; i++)
+	{
+		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);
+		W[hash]->id = BLOCKCHAIN_NODES_PUBLIC_ID[i];
+		W[hash]->balance = i + 20;
+	}
+	return W;
 }
 
 // validate transaction
-itemInfo *InputTransactionData()
+txInfo *InputTransactionData()
 {
-	itemInfo *newtx = (itemInfo *)malloc(sizeof(itemInfo));
+	txInfo *newtx = (txInfo *)malloc(sizeof(txInfo));
 	if (newtx == NULL)
 	{
 		printf("Memory allocation failed!\n");
 		return NULL;
 	}
 
+	printf("Enter your PUBLIC ID : ");
+	scanf("%s", newtx->id);
+
 	printf("Enter sender's name: ");
-	fgets(newtx->sender, NAME_SIZE, stdin);
-	newtx->sender[strcspn(newtx->sender, "\n")] = '\0';
+	scanf("%s", newtx->sender);
 
 	printf("Enter receiver's name: ");
-	fgets(newtx->receiver, NAME_SIZE, stdin);
-	newtx->receiver[strcspn(newtx->receiver, "\n")] = '\0';
+	scanf("%s", newtx->receiver);
 
 	printf("Enter the number of items: ");
+	// scanf("%s", newtx->sender);
 	if (scanf("%zu", &newtx->itemCount) != 1 || newtx->itemCount == 0)
 	{
 		printf("Invalid item count.\n");
@@ -447,8 +454,9 @@ itemInfo *InputTransactionData()
 	{
 		printf("\nItem %zu:\n", i + 1);
 		printf("Enter item name: ");
+		// Clear buffer
 		while (getchar() != '\n')
-			; // Clear buffer
+			;
 		fgets(newtx->items[i].itemName, NAME_SIZE, stdin);
 		newtx->items[i].itemName[strcspn(newtx->items[i].itemName, "\n")] = '\0';
 
@@ -460,4 +468,18 @@ itemInfo *InputTransactionData()
 	}
 
 	return newtx;
+}
+
+int ValidateTransactionData(txInfo* newtx, WalletStorage *WalletBank)
+{
+	uint32_t hash;
+	hash = sbj4_hash(newtx->id);
+
+	// if user has more than transaction return true else false
+	if (WalletBank[hash]->balance >= newtx->items->amount)
+	{
+		WalletBank[hash]->balance -= newtx->items->amount; 
+		return 1;
+	}
+	return 0;
 }
