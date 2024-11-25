@@ -481,5 +481,43 @@ int ValidateTransactionData(txInfo* newtx, WalletStorage *WalletBank)
 		WalletBank[hash]->balance -= newtx->items->amount; 
 		return 1;
 	}
-	return 0;
+	return 0;	CreateAccount();
+
+}
+
+// create global variables to store node credentials
+char NODE_PUBLIC_ID[PUBLIC_ID_SIZE];
+char NODE_PRIVATE_ID[PUBLIC_ID_SIZE];
+
+void CreateAccount()
+{
+	printf("Create a New Account\n");
+    printf("---------------------\n");
+
+	printf("Enter your public id: ");
+	scanf("%s", NODE_PUBLIC_ID);
+
+	printf("Enter your private id: ");
+	scanf("%s", NODE_PRIVATE_ID);
+
+	printf("\nAccount created successfully!\n");
+    printf("Public ID: %s\n", NODE_PUBLIC_ID);
+    printf("Private ID: %s\n", NODE_PRIVATE_ID);
+	return;
+}
+
+// your profile dashboard to view transactions data
+void CreateProfileDashboard()
+{
+    printf("\n==============================\n");
+    printf("     PROFILE DASHBOARD\n");
+    printf("==============================\n");
+    printf("Welcome, Node ID: %s\n", NODE_PUBLIC_ID);
+    printf("------------------------------\n");
+    printf("Please choose an option:\n");
+    printf("1. Lookup Transaction\n");
+    printf("2. View Account Details\n");
+    printf("3. Exit\n");
+    printf("==============================\n");
+    return;
 }

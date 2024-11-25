@@ -112,3 +112,9 @@ void *receive_thread(void *server_fd);
 WalletStorage* CreatesNodesWithRandomBalance();
 txInfo *InputTransactionData();
 int ValidateTransactionData(txInfo* newtx, WalletStorage *WalletBank);
+
+// create account
+void CreateAccount();
+
+// your profile
+void CreateProfileDashboard();

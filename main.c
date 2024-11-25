@@ -19,8 +19,9 @@ void displayMenu()
 	printf("9. Network Options\n");
 	printf("   a. Share Block via P2P Network\n");
 	printf("   b. Receive Block from P2P Network\n");
-	printf("11. Make a transaction\n");
 	printf("10. Exit\n");
+	printf("11. Make a transaction\n");
+	printf("12. Your Profile\n");
 	printf("\n===========================================================================\n");
 }
 
@@ -29,6 +30,9 @@ int FIRST_TRANSACTION = 0;
 
 int main()
 {
+
+	CreateAccount();
+
 	int choice, index;
 	char subChoice;
 	char filename[FILE_NAME_SIZE];
@@ -128,6 +132,10 @@ int main()
 			txInfo *newtx = InputTransactionData();
 			// verify transaction & update WalletBank
 			ValidateTransactionData(newtx, WalletBank) ? printf("Valid Transaction\n") : printf("Invalid transaction\n");
+			break;
+		case 12:
+			CreateProfileDashboard();
+			break;
 		default:
 			printf("Invalid choice. Please enter a number between 1 and 10.\n");
 			break;
