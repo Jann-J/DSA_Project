@@ -1,0 +1,5 @@
+UUID:   https://stackoverflow.com/questions/51053568/generating-a-random-uuid-in-c
+
+INSTALL: sudo apt-get install uuid-dev
+
+COMPILE: cc -Wall test.c -luuid

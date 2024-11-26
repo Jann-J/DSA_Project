@@ -4,7 +4,7 @@
 # install dependable libraries
 # -y say yes to all prompt messages
 # /dev/null doesn't show installation process
-sudo apt-get install -y libssl-dev > /dev/null 2>&1
+sudo apt-get install -y libssl-dev uuid-dev > /dev/null 2>&1
 
 cc -Wall main.c logic.c peer.c -o run -lssl -lcrypto
 
