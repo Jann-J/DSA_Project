@@ -25,13 +25,34 @@ void displayMenu()
 	printf("\n===========================================================================\n");
 }
 
+void ProfileMenu()
+{
+	printf("\n==============================\n");
+	printf("     PROFILE DASHBOARD\n");
+	printf("==============================\n");
+	printf("Welcome \n");
+	printf("------------------------------\n");
+	printf("Please choose an option:\n");
+	printf("1. Lookup Transaction\n");
+	printf("2. View Account Details\n");
+	printf("3. Exit\n");
+	printf("==============================\n");
+}
+
 // for first transaction to avoid conflict
 int FIRST_TRANSACTION = 0;
 
 int main()
 {
-
+	// Login To Your Account
 	CreateAccount();
+
+	// Give Random Wallete Balance to Nodes
+	if (FIRST_TRANSACTION == 0)
+	{
+		CreatesNodesWithRandomBalance();
+		FIRST_TRANSACTION = 1;
+	}
 
 	int choice, index;
 	char subChoice;
@@ -64,6 +85,7 @@ int main()
 			break;
 		case 4:
 			printf("Option 4: Validate Blockchain Integrity selected.\n");
+			isBlockChainValid(chain);
 			break;
 		case 5:
 			printf("Option 5: Search Transactions selected.\n");
@@ -123,18 +145,12 @@ int main()
 			freeBlockchain(&chain);
 			return 0;
 		case 11:
-			// WalletStorage *WalletBank;
-			if (FIRST_TRANSACTION == 0)
-			{
-				CreatesNodesWithRandomBalance();
-				// WalletBank = CreatesNodesWithRandomBalance();
-				FIRST_TRANSACTION = 1;
-			}
 			txInfo *newtx = InputTransactionData();
 			// verify transaction & update WalletBank
 			ValidateTransactionData(newtx) ? printf("Valid Transaction\n") : printf("Invalid transaction\n");
 			break;
 		case 12:
+			ProfileMenu();
 			CreateProfileDashboard();
 			break;
 		default:

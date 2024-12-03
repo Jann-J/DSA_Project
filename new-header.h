@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>
+#include <openssl/evp.h>
 #define NAME_SIZE 50
 #define MAX_LINE 128
 #define SHA256_DIGEST_LENGTH 32
-#define PUBLIC_ID_SIZE 32
-#define MAX_NODES_IN_BLOCKCHAIN 30
 #define TNX_SIZE 16
+#define ID_SIZE 16
 #define TABLE_SIZE 101
 #define DIFFICULTY 2
 
@@ -21,11 +21,12 @@
 #include <sys/select.h>
 #define BUFFER_SIZE 1024
 
-// Structure of Blockchain
+
+//Structure of Blockchain
 typedef struct Info{
     char tnx[TNX_SIZE];
-    char senderID[PUBLIC_ID_SIZE];
-    char receiverID[PUBLIC_ID_SIZE];
+    char senderID[ID_SIZE];
+    char receiverID[ID_SIZE];
     float amt;
 }Info;
 
@@ -62,26 +63,10 @@ typedef struct HashTable{
 
 // Networking
 // Receiver Thread Argument Structure
-typedef struct ThreadArguments
-{
+typedef struct ThreadArguments{
     int server_fd;
     char *blockname;
 } ThreadArguments;
-
-// UPDATED TRANSACTION STRUCTURE
-typedef struct txInfo
-{
-    char id[PUBLIC_ID_SIZE];
-    char sender[NAME_SIZE];
-    char receiver[NAME_SIZE];
-    uint32_t txBalance;
-} txInfo;
-
-typedef struct WalletStorage
-{
-    char id[PUBLIC_ID_SIZE];
-    int balance;
-}WalletStorage;
 
 // FUNCTION PROTOTYPES
 // Block Add Edit Print
@@ -97,7 +82,7 @@ void EditBlock(Blockchain chain, char *filename);
 
 // SHA256
 void computeSHA256(const char *data, unsigned char *hash);
-void printHash(unsigned char *hash);
+void printHash(unsigned char *hash, long unsigned int);
 
 // Merkle Root Generation
 unsigned char **createLeaves(Info *info, size_t TxnCount);
@@ -111,23 +96,3 @@ int P2P_NetworkConnection(char *blockname);
 void sending();
 void receiving(int server_fd, char *blockname);
 void *receive_thread(void *server_fd);
-
-// hashtable for Transaction Validation
-WalletStorage* CreatesNodesWithRandomBalance();
-txInfo *InputTransactionData();
-int ValidateTransactionData(txInfo* newtx);
-
-// create account
-void CreateAccount();
-
-// your profile
-void ProfileMenu();
-void CreateProfileDashboard();
-
-//Mining function prototypes
-void Mineblock(BlockData *blockData);
-int isHashValid(unsigned char *hash);
-unsigned char *calculateHashForBlock(BlockData *blockData);
-
-//block chain validation 
-void isBlockChainValid(Blockchain B);
