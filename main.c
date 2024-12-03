@@ -72,9 +72,21 @@ int main()
 			printf("Option 1: Add a New Block from CSV File selected.\n");
 			printf("Enter .csv filename for adding the block: ");
 			scanf("%s", filename);
-			if (ReadFile(filename) == NULL)
+			BlockData *data;
+			data = ReadFile(filename);
+			if (data == NULL)
 				break;
-			AddBlock(&chain, (ReadFile(filename)));
+
+
+			printf("\n\n");
+
+			sortTransactions(&data->info, data->NumOfTxn);
+
+			AddBlock(&chain, data);
+			// heapsort
+			// verify check
+			// hash table wallet
+
 			break;
 		case 2:
 			printf("Option 2: View Blockchain selected.\n");

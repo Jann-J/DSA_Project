@@ -52,14 +52,6 @@ typedef struct HashTable{
     HashNode *buckets[TABLE_SIZE];
 }HashTable;
 
-// Networking
-// Receiver Thread Argument Structure
-// typedef struct ThreadArguments
-// {
-//     int server_fd;
-//     char *blockname;
-// } ThreadArguments;
-
 // UPDATED TRANSACTION STRUCTURE
 typedef struct txInfo
 {
@@ -98,12 +90,6 @@ unsigned char **buildParentHashes(unsigned char **hashes, size_t numHashes, size
 unsigned char *constructMerkleTree(Info *info, size_t TxnCount);
 void updateMerkleRoot(BlockData *blockData);
 
-// // Networking
-// int P2P_NetworkConnection(char *blockname);
-// void sending();
-// void receiving(int server_fd, char *blockname);
-// void *receive_thread(void *server_fd);
-
 // hashtable for Transaction Validation
 WalletStorage* CreatesNodesWithRandomBalance();
 txInfo *InputTransactionData();
@@ -123,3 +109,6 @@ unsigned char *calculateHashForBlock(BlockData *blockData);
 
 //block chain validation 
 void isBlockChainValid(Blockchain B);
+
+// Heap Sort
+void sortTransactions(Info **transactions, int n);
