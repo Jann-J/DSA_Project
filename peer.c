@@ -8,10 +8,9 @@ ThreadArguments *StoreReceiveThreadArgs(int server_fd, char *blockname)
     return arg;
 }
 
-int P2P_NetworkConnection(char *blockname){
-    int PORT;
-    printf("Enter your port number: ");
-    scanf("%d", &PORT);
+int P2P_NetworkConnection(char *blockname)
+{
+    int PORT = 8080;
 
     int server_fd;
     struct sockaddr_in address;
@@ -164,15 +163,16 @@ void write_file(int client_socket_fd, char *blockname)
     }
 
     char buffer[BUFFER_SIZE];
-    int n;
+    int bytesReceived;
 
     // Receive data and write to file
-    while ((n = recv(client_socket_fd, buffer, BUFFER_SIZE, 0)) > 0)
+    while ((bytesReceived = recv(client_socket_fd, buffer, BUFFER_SIZE, 0)) > 0)
     {
-        fwrite(buffer, sizeof(char), n, fp);
+        buffer[bytesReceived] = '\0';
+        fputs(buffer, fp);
     }
 
-    if (n < 0)
+    if (bytesReceived < 0)
     {
         perror("Error receiving data");
     }

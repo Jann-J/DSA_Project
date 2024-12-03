@@ -11,15 +11,7 @@
 #define DIFFICULTY 2
 
 // networking
-#include <unistd.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <pthread.h>
-#include <sys/select.h>
-#define BUFFER_SIZE 1024
+#include "peer.h"
 
 // Structure of Blockchain
 typedef struct Info{
@@ -62,11 +54,11 @@ typedef struct HashTable{
 
 // Networking
 // Receiver Thread Argument Structure
-typedef struct ThreadArguments
-{
-    int server_fd;
-    char *blockname;
-} ThreadArguments;
+// typedef struct ThreadArguments
+// {
+//     int server_fd;
+//     char *blockname;
+// } ThreadArguments;
 
 // UPDATED TRANSACTION STRUCTURE
 typedef struct txInfo
@@ -106,11 +98,11 @@ unsigned char **buildParentHashes(unsigned char **hashes, size_t numHashes, size
 unsigned char *constructMerkleTree(Info *info, size_t TxnCount);
 void updateMerkleRoot(BlockData *blockData);
 
-// Networking
-int P2P_NetworkConnection(char *blockname);
-void sending();
-void receiving(int server_fd, char *blockname);
-void *receive_thread(void *server_fd);
+// // Networking
+// int P2P_NetworkConnection(char *blockname);
+// void sending();
+// void receiving(int server_fd, char *blockname);
+// void *receive_thread(void *server_fd);
 
 // hashtable for Transaction Validation
 WalletStorage* CreatesNodesWithRandomBalance();
