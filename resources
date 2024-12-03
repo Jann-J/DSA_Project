@@ -3,3 +3,128 @@ UUID:   https://stackoverflow.com/questions/51053568/generating-a-random-uuid-in
 INSTALL: sudo apt-get install uuid-dev
 
 COMPILE: cc -Wall test.c -luuid
+
+file implementation:
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <openssl/sha.h>
+
+// Define a hash table entry
+typedef struct HashEntry {
+    unsigned char tx_id[SHA256_DIGEST_LENGTH]; // SHA-256 hash
+    long file_offset; // Pointer to transaction info in file
+    struct HashEntry *next; // For collision handling (chaining)
+} HashEntry;
+
+#define TABLE_SIZE 1000 // Adjust size based on expected transactions
+
+HashEntry *hash_table[TABLE_SIZE];
+
+// Simple hash function to map SHA-256 to table index
+unsigned int hash_function(const unsigned char *tx_id) {
+    unsigned int hash = 0;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        hash = (hash * 31 + tx_id[i]) % TABLE_SIZE;
+    }
+    return hash;
+}
+
+// Compute SHA-256 hash
+void compute_sha256(const char *data, unsigned char hash[SHA256_DIGEST_LENGTH]) {
+    SHA256_CTX ctx;
+    SHA256_Init(&ctx);
+    SHA256_Update(&ctx, data, strlen(data));
+    SHA256_Final(hash, &ctx);
+}
+
+// Insert into hash table
+void insert_transaction(const char *transaction_data, long file_offset) {
+    unsigned char tx_id[SHA256_DIGEST_LENGTH];
+    compute_sha256(transaction_data, tx_id);
+
+    unsigned int index = hash_function(tx_id);
+    HashEntry *new_entry = (HashEntry *)malloc(sizeof(HashEntry));
+    memcpy(new_entry->tx_id, tx_id, SHA256_DIGEST_LENGTH);
+    new_entry->file_offset = file_offset;
+    new_entry->next = hash_table[index];
+    hash_table[index] = new_entry;
+}
+
+// Search for a transaction
+long search_transaction(const char *transaction_data) {
+    unsigned char tx_id[SHA256_DIGEST_LENGTH];
+    compute_sha256(transaction_data, tx_id);
+
+    unsigned int index = hash_function(tx_id);
+    HashEntry *entry = hash_table[index];
+
+    while (entry) {
+        if (memcmp(entry->tx_id, tx_id, SHA256_DIGEST_LENGTH) == 0) {
+            return entry->file_offset; // Found, return file offset
+        }
+        entry = entry->next;
+    }
+
+    return -1; // Not found
+}
+
+// Write transaction to file
+long write_transaction_to_file(const char *transaction_data, const char *filename) {
+    FILE *file = fopen(filename, "a");
+    if (!file) {
+        perror("File open error");
+        exit(1);
+    }
+
+    long offset = ftell(file);
+    fprintf(file, "%s\n", transaction_data);
+    fclose(file);
+    return offset;
+}
+
+// Read transaction from file
+void read_transaction_from_file(long offset, const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("File open error");
+        exit(1);
+    }
+
+    fseek(file, offset, SEEK_SET);
+    char buffer[256];
+    if (fgets(buffer, sizeof(buffer), file)) {
+        printf("Transaction Info: %s", buffer);
+    } else {
+        printf("Transaction not found at offset %ld\n", offset);
+    }
+
+    fclose(file);
+}
+
+int main() {
+    const char *filename = "transactions.txt";
+
+    // Example transactions
+    const char *tx1 = "Alice->Bob:100.00:1679949324";
+    const char *tx2 = "Charlie->Dave:50.00:1679949355";
+
+    // Write transactions to file and store in hash table
+    long offset1 = write_transaction_to_file(tx1, filename);
+    insert_transaction(tx1, offset1);
+
+    long offset2 = write_transaction_to_file(tx2, filename);
+    insert_transaction(tx2, offset2);
+
+    // Search and retrieve transaction
+    long search_offset = search_transaction(tx1);
+    if (search_offset != -1) {
+        printf("Transaction found at offset %ld\n", search_offset);
+        read_transaction_from_file(search_offset, filename);
+    } else {
+        printf("Transaction not found\n");
+    }
+
+    return 0;
+}

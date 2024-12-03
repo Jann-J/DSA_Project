@@ -466,7 +466,7 @@ txInfo *InputTransactionData()
 		printf("Enter price: ");
 		scanf("%f", &newtx->items[i].amount);
 	}
-
+	
 	return newtx;
 }
 
