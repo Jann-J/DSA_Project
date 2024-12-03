@@ -123,15 +123,16 @@ int main()
 			freeBlockchain(&chain);
 			return 0;
 		case 11:
-			WalletStorage *WalletBank;
+			// WalletStorage *WalletBank;
 			if (FIRST_TRANSACTION == 0)
 			{
-				WalletBank = CreatesNodesWithRandomBalance();
+				CreatesNodesWithRandomBalance();
+				// WalletBank = CreatesNodesWithRandomBalance();
 				FIRST_TRANSACTION = 1;
 			}
 			txInfo *newtx = InputTransactionData();
 			// verify transaction & update WalletBank
-			ValidateTransactionData(newtx, WalletBank) ? printf("Valid Transaction\n") : printf("Invalid transaction\n");
+			ValidateTransactionData(newtx) ? printf("Valid Transaction\n") : printf("Invalid transaction\n");
 			break;
 		case 12:
 			CreateProfileDashboard();

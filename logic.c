@@ -389,27 +389,32 @@ uint32_t sbj4_hash(char *key)
 	return combined;
 }
 
-// Create Hash Table to store wallet balance
-void InitWalletSorage(WalletStorage *W, int total)
+char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
+	"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004",
+	"public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008",
+	"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012",
+	"public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016",
+	"public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020"};
+
+WalletStorage *WalletBank = NULL;
+
+WalletStorage *CreatesNodesWithRandomBalance()
 {
-	W = (WalletStorage *)malloc(sizeof(WalletStorage));
-	return;
-}
+	WalletBank = (WalletStorage *)malloc(sizeof(WalletStorage) * MAX_NODES_IN_BLOCKCHAIN);
+	if (!WalletBank)
+	{
+		perror("Failed to allocate memory for WalletBank");
+		exit(EXIT_FAILURE);
+	}
 
-char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004", "public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008", "public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012", "public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016", "public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020"};
-
-WalletStorage* CreatesNodesWithRandomBalance()
-{
-	WalletStorage *W = (WalletStorage *)malloc(sizeof(WalletStorage));
-	InitWalletSorage(W, TOTAL_NODES_IN_BLOCKCHAIN);
-
-	for (int i = 0; i < TOTAL_NODES_IN_BLOCKCHAIN; i++)
+	// Current nodes are 20
+	for (int i = 0; i < 20; i++)
 	{
 		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);
-		W[hash]->id = BLOCKCHAIN_NODES_PUBLIC_ID[i];
-		W[hash]->balance = i + 20;
+		strcpy(WalletBank[hash].id, BLOCKCHAIN_NODES_PUBLIC_ID[i]);
+		WalletBank[hash].balance = i + 20;
 	}
-	return W;
+	return WalletBank;
 }
 
 // validate transaction
@@ -431,68 +436,63 @@ txInfo *InputTransactionData()
 	printf("Enter receiver's name: ");
 	scanf("%s", newtx->receiver);
 
-	printf("Enter the number of items: ");
-	// scanf("%s", newtx->sender);
-	if (scanf("%zu", &newtx->itemCount) != 1 || newtx->itemCount == 0)
-	{
-		printf("Invalid item count.\n");
-		free(newtx);
-		return NULL;
-	}
+	printf("Enter transaction amount: ");
+	scanf("%u", &newtx->txBalance);
 
-	// Allocate memory for the items array
-	newtx->items = (item *)malloc(newtx->itemCount * sizeof(item));
-	if (newtx->items == NULL)
-	{
-		printf("Memory allocation for items failed!\n");
-		free(newtx);
-		return NULL;
-	}
-
-	// Input each item's details
-	for (size_t i = 0; i < newtx->itemCount; i++)
-	{
-		printf("\nItem %zu:\n", i + 1);
-		printf("Enter item name: ");
-		// Clear buffer
-		while (getchar() != '\n')
-			;
-		fgets(newtx->items[i].itemName, NAME_SIZE, stdin);
-		newtx->items[i].itemName[strcspn(newtx->items[i].itemName, "\n")] = '\0';
-
-		printf("Enter quantity: ");
-		scanf("%d", &newtx->items[i].quantity);
-
-		printf("Enter price: ");
-		scanf("%f", &newtx->items[i].amount);
-	}
-	
 	return newtx;
 }
 
-int ValidateTransactionData(txInfo* newtx, WalletStorage *WalletBank)
+int ValidateTransactionData(txInfo *newtx)
 {
 	uint32_t hash;
 	hash = sbj4_hash(newtx->id);
 
 	// if user has more than transaction return true else false
-	if (WalletBank[hash]->balance >= newtx->items->amount)
+	if (WalletBank[hash].balance >= newtx->txBalance)
 	{
-		WalletBank[hash]->balance -= newtx->items->amount; 
+		WalletBank[hash].balance -= newtx->txBalance;
 		return 1;
 	}
-	return 0;	CreateAccount();
-
+	return 0;
 }
 
 // create global variables to store node credentials
 char NODE_PUBLIC_ID[PUBLIC_ID_SIZE];
 char NODE_PRIVATE_ID[PUBLIC_ID_SIZE];
 
+int isAuthenticated()
+{
+	char private_id[PUBLIC_ID_SIZE];
+	printf("Enter your Private ID: ");
+	scanf("%s", private_id);
+	return (strcmp(private_id, NODE_PRIVATE_ID) == 0) ? 1 : 0;
+}
+
+void LookupTransaction()
+{
+	return;
+}
+
+void ViewAccountDetails()
+{
+	uint32_t hash = sbj4_hash(NODE_PUBLIC_ID);
+	printf("Public ID: [%s]\n", NODE_PUBLIC_ID);
+	printf("Private ID: [%s]\n", NODE_PRIVATE_ID);
+
+	if (!WalletBank)
+	{
+		printf("Wallet Balance: 0\n");
+	}
+	else
+	{
+		printf("Wallet Balance: %d\n", WalletBank[hash].balance);
+	}
+}
+
 void CreateAccount()
 {
 	printf("Create a New Account\n");
-    printf("---------------------\n");
+	printf("---------------------\n");
 
 	printf("Enter your public id: ");
 	scanf("%s", NODE_PUBLIC_ID);
@@ -501,23 +501,40 @@ void CreateAccount()
 	scanf("%s", NODE_PRIVATE_ID);
 
 	printf("\nAccount created successfully!\n");
-    printf("Public ID: %s\n", NODE_PUBLIC_ID);
-    printf("Private ID: %s\n", NODE_PRIVATE_ID);
+	printf("Public ID: %s\n", NODE_PUBLIC_ID);
+	printf("Private ID: %s\n", NODE_PRIVATE_ID);
 	return;
 }
 
 // your profile dashboard to view transactions data
 void CreateProfileDashboard()
 {
-    printf("\n==============================\n");
-    printf("     PROFILE DASHBOARD\n");
-    printf("==============================\n");
-    printf("Welcome, Node ID: %s\n", NODE_PUBLIC_ID);
-    printf("------------------------------\n");
-    printf("Please choose an option:\n");
-    printf("1. Lookup Transaction\n");
-    printf("2. View Account Details\n");
-    printf("3. Exit\n");
-    printf("==============================\n");
-    return;
+	printf("\n==============================\n");
+	printf("     PROFILE DASHBOARD\n");
+	printf("==============================\n");
+	printf("Welcome, Node ID: %s\n", NODE_PUBLIC_ID);
+	printf("------------------------------\n");
+	printf("Please choose an option:\n");
+	printf("1. Lookup Transaction\n");
+	printf("2. View Account Details\n");
+	printf("3. Exit\n");
+	printf("==============================\n");
+
+	int choice;
+	printf("Enter your choice: ");
+	scanf("%d", &choice);
+
+	switch (choice)
+	{
+	case 1:
+		isAuthenticated() ? LookupTransaction() : printf("Incorrect id..\n");
+		break;
+
+	case 2:
+		isAuthenticated() ? ViewAccountDetails() : printf("Incorrect id..\n");
+
+	default:
+		break;
+	}
+	return;
 }
