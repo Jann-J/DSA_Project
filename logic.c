@@ -765,14 +765,47 @@ void heapSort(Info **array, int n)
  * Function: A wrapper function for heapsort that sorts transactions based on `senderID`.
  * Return value: None
  */
-void sortTransactions(Info **transactions, int n)
+void sortTransactions(BlockData *data, int n)
 {
-	// heapSort(transactions, n);
+	// Create an array of pointers to `Info` structs
+	Info **tnxPointers = (Info **)malloc(sizeof(Info *) * n);
+	if (tnxPointers == NULL)
+	{
+		fprintf(stderr, "Error: Memory allocation failed for transaction pointers.\n");
+		free(data->info);
+		free(data);
+		return;
+	}
+
+	// Populate the array of pointers
 	for (int i = 0; i < n; i++)
 	{
-		printf("%s ", transactions[i]->receiverID);
-		printf("%s\n", transactions[i]->senderID);
+		tnxPointers[i] = &data->info[i];
 	}
-	printf("\n\n");
-	return;
+
+	// Perform heap sort on the array of pointers
+	heapSort(tnxPointers, n);
+
+	// Reorder the original `data->info` array based on the sorted pointers
+	Info *sortedData = (Info *)malloc(sizeof(Info) * n);
+	if (sortedData == NULL)
+	{
+		fprintf(stderr, "Error: Memory allocation failed for sorted data.\n");
+		free(tnxPointers);
+		free(data->info);
+		free(data);
+		return;
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		sortedData[i] = *tnxPointers[i];
+	}
+
+	// Replace the original data with the sorted data
+	free(data->info);
+	data->info = sortedData;
+
+	// Clean up
+	free(tnxPointers);
 }

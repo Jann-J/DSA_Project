@@ -111,4 +111,4 @@ unsigned char *calculateHashForBlock(BlockData *blockData);
 void isBlockChainValid(Blockchain B);
 
 // Heap Sort
-void sortTransactions(Info **transactions, int n);
+void sortTransactions( BlockData *data, int n);

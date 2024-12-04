@@ -45,7 +45,7 @@ int main()
 	CreateAccount();
 
 	// Give Random Wallete Balance to Nodes
-	CreatesNodesWithRandomBalance();	
+	CreatesNodesWithRandomBalance();
 
 	int choice, index;
 	char subChoice;
@@ -65,28 +65,16 @@ int main()
 			printf("Option 1: Add a New Block from CSV File selected.\n");
 			printf("Enter .csv filename for adding the block: ");
 			scanf("%s", filename);
+
 			BlockData *data = ReadFile(filename);
 			if (data == NULL)
 				break;
 
-			sortTransactions(&data->info, data->NumOfTxn);
+			// Sort the transactions using the array of pointers
+			sortTransactions(data, data->NumOfTxn);
 
-			// for (int i = 0; i < data->NumOfTxn; i++)
-			// {
-			// 	printf("Transaction %d:\n", i + 1);
-			// 	printf("\tSender ID: %s\n", data->info[i].senderID);
-			// 	printf("\tReceiver ID: %s\n", data->info[i].receiverID);
-			// 	printf("\tAmount: %.2f\n", data->info[i].amt);
-			// }
-
-			// Free the allocated pointer array
-			// free(transactionPtrs);
-
-			// AddBlock(&chain, data);
-			// heapsort
-			// verify check
-			// hash table wallet
-
+			// Clean Up
+			free(data);
 			break;
 		case 2:
 			printf("Option 2: View Blockchain selected.\n");
