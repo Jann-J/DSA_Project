@@ -5,23 +5,16 @@
 void displayMenu()
 {
 	printf("\n==================== Blockchain Supply Chain Management ====================\n\n");
-	printf("1. Add a New Block from CSV File\n");
-	printf("2. View Blockchain\n");
-	printf("3. Edit a Block\n");
-	printf("4. Validate Blockchain Integrity\n");
-	printf("5. Search Transactions\n");
-	printf("   a. By Sender\n");
-	printf("   b. By Receiver\n");
-	printf("   c. By Item Name\n");
-	printf("6. Display Block Details\n");
-	printf("7. Export Blockchain Data to CSV\n");
-	printf("8. Import Blockchain Data from CSV\n");
-	printf("9. Network Options\n");
+	printf("1. Your Profile\n");
+	printf("2. Add a New Block from CSV File\n");
+	printf("3. Validate Blockchain Integrity\n");
+	printf("4. Search Transactions\n");
+	printf("5. Display Block Details\n");
+	printf("6. Network Options\n");
 	printf("   a. Share Block via P2P Network\n");
 	printf("   b. Receive Block from P2P Network\n");
-	printf("10. Exit\n");
-	printf("11. Make a transaction\n");
-	printf("12. Your Profile\n");
+	printf("7. Exit\n");
+	printf("8. View Blockchain.\n");
 	printf("\n===========================================================================\n");
 }
 
@@ -41,14 +34,15 @@ void ProfileMenu()
 
 int main()
 {
-	while(1){
+	/*while(1){
 		if(isAuthenticated())
 			break;
-	}	
+	}*/	
 
 	int choice, index;
 	char subChoice;
 	char filename[FILE_NAME_SIZE];
+	char userID[PUBLIC_ID_SIZE];
 
 	Blockchain chain;
 	init_blockchain(&chain);
@@ -61,6 +55,10 @@ int main()
 		switch (choice)
 		{
 		case 1:
+			ProfileMenu();
+			CreateProfileDashboard();
+			break;
+		case 2:
 			printf("Option 1: Add a New Block from CSV File selected.\n");
 			printf("Enter .csv filename for adding the block: ");
 			scanf("%s", filename);
@@ -77,50 +75,25 @@ int main()
 			// Clean Up
 			free(data);
 			break;
-		case 2:
-			printf("Option 2: View Blockchain selected.\n");
-			printBlockchain(chain);
-			break;
+			
 		case 3:
-			printf("Option 3: Edit a Block selected.\n");
-			break;
-		case 4:
 			printf("Option 4: Validate Blockchain Integrity selected.\n");
 			isBlockChainValid(chain);
 			break;
-		case 5:
+		case 4:
 			printf("Option 5: Search Transactions selected.\n");
-			printf("   Enter sub-choice (a/b/c): ");
-			scanf(" %c", &subChoice); // Note the space before %c to handle newline characters
-			switch (subChoice)
-			{
-			case 'a':
-				printf("   Sub-option a: By Sender selected.\n");
-				break;
-			case 'b':
-				printf("   Sub-option b: By Receiver selected.\n");
-				break;
-			case 'c':
-				printf("   Sub-option c: By Item Name selected.\n");
-				break;
-			default:
-				printf("   Invalid sub-choice. Please try again.\n");
-				break;
-			}
+			printf("Enter private ID: ");
+			scanf("%s", userID);
+			//cmp with private id
+			//searchID
 			break;
-		case 6:
+		case 5:
 			printf("Option 6: Display Block Details selected.\n");
 			printf("Enter Index of block to be displayed: ");
 			scanf("%d", &index);
 			printBlock(chain, index);
 			break;
-		case 7:
-			printf("Option 7: Export Blockchain Data to CSV selected.\n");
-			break;
-		case 8:
-			printf("Option 8: Import Blockchain Data from CSV selected.\n");
-			break;
-		case 9:
+		case 6:
 			printf("Option 9: Network Options selected.\n");
 			printf("   Enter sub-choice (a/b): ");
 			scanf(" %c", &subChoice); // Note the space before %c to handle newline characters
@@ -142,18 +115,12 @@ int main()
 				break;
 			}
 			break;
-		case 10:
-			printf("Exiting the program. Goodbye!\n");
-			freeBlockchain(&chain);
-			return 0;
-		case 11:
-			txInfo *newtx = InputTransactionData();
-			// verify transaction & update WalletBank
-			ValidateTransactionData(newtx) ? printf("Valid Transaction\n") : printf("Invalid transaction\n");
+		case 7:
+			exit(0);
 			break;
-		case 12:
-			ProfileMenu();
-			CreateProfileDashboard();
+		case 8:
+			printf("Option 2: View Blockchain selected.\n");
+			printBlockchain(chain);
 			break;
 		default:
 			printf("Invalid choice. Please enter a number between 1 and 10.\n");

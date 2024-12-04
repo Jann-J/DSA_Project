@@ -147,8 +147,7 @@ BlockData *ReadFile(char *filename)
 void AddBlock(Blockchain *chain, BlockData *blockData)
 {
 	block *newBlock = (block *)malloc(sizeof(block));
-	if (newBlock == NULL)
-	{
+	if (newBlock == NULL){
 		perror("Error: Memory allocation failed.\n");
 		return;
 	}
@@ -162,9 +161,6 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	// Add Block Nonce
 	blockData->nonce = 1234;
 
-	// Calculate hash new block
-	memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
-
 	updateMerkleRoot(blockData);
 
 	// Genesis block
@@ -175,18 +171,21 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 		// Update newBlock's prevHash
 		memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
 		newBlock->data.index = 1;
+		Mineblock(blockData);
 		chain->head = newBlock;
 		chain->rear = newBlock;
 		printf("Block added successfully.\n");
 		return;
 	}
 
+	// Calculate hash new block
+	//memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
 	memcpy(blockData->prevHash, chain->rear->data.currHash, SHA256_DIGEST_LENGTH);
 	memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
+	newBlock->data.index = chain->rear->data.index + 1;
 
 	Mineblock(blockData);
 
-	newBlock->data.index = chain->rear->data.index + 1;
 	chain->rear->next = newBlock;
 	chain->rear = newBlock;
 
