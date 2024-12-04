@@ -97,6 +97,17 @@ BlockData *ReadFile(char *filename)
 		return NULL;
 	}
 
+	// Ignore Title row
+	i = 0;
+	while ((ch = fgetc(fp)) != '\n' && ch != EOF)
+	{
+		if (i < MAX_LINE - 1)
+		{
+			row[i] = ch;
+			i++;
+		}
+	}
+
 	// Read each transaction
 	while (fgets(row, MAX_LINE, fp) && txnIndex < blockData->NumOfTxn)
 	{
@@ -410,7 +421,7 @@ char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
 
 WalletStorage *WalletBank = NULL;
 
-WalletStorage *CreatesNodesWithRandomBalance()
+void CreatesNodesWithRandomBalance()
 {
 	WalletBank = (WalletStorage *)malloc(sizeof(WalletStorage) * MAX_NODES_IN_BLOCKCHAIN);
 	if (!WalletBank)
@@ -426,7 +437,6 @@ WalletStorage *CreatesNodesWithRandomBalance()
 		strcpy(WalletBank[hash].id, BLOCKCHAIN_NODES_PUBLIC_ID[i]);
 		WalletBank[hash].balance = i + 2000;
 	}
-	return WalletBank;
 }
 
 // validate transaction
@@ -686,7 +696,7 @@ void swap(Info **a, Info **b)
 {
 	Info *temp = *a;
 	*a = *b;
-	*b = *temp;
+	*b = temp;
 }
 
 /*
@@ -757,6 +767,12 @@ void heapSort(Info **array, int n)
  */
 void sortTransactions(Info **transactions, int n)
 {
-	heapify(transactions, n, 0);
 	// heapSort(transactions, n);
+	for (int i = 0; i < n; i++)
+	{
+		printf("%s ", transactions[i]->receiverID);
+		printf("%s\n", transactions[i]->senderID);
+	}
+	printf("\n\n");
+	return;
 }

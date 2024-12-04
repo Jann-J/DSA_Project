@@ -91,7 +91,7 @@ unsigned char *constructMerkleTree(Info *info, size_t TxnCount);
 void updateMerkleRoot(BlockData *blockData);
 
 // hashtable for Transaction Validation
-WalletStorage* CreatesNodesWithRandomBalance();
+void CreatesNodesWithRandomBalance();
 txInfo *InputTransactionData();
 int ValidateTransactionData(txInfo* newtx);
 

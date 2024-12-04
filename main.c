@@ -39,20 +39,13 @@ void ProfileMenu()
 	printf("==============================\n");
 }
 
-// for first transaction to avoid conflict
-int FIRST_TRANSACTION = 0;
-
 int main()
 {
 	// Login To Your Account
 	CreateAccount();
 
 	// Give Random Wallete Balance to Nodes
-	if (FIRST_TRANSACTION == 0)
-	{
-		CreatesNodesWithRandomBalance();
-		FIRST_TRANSACTION = 1;
-	}
+	CreatesNodesWithRandomBalance();	
 
 	int choice, index;
 	char subChoice;
@@ -72,17 +65,24 @@ int main()
 			printf("Option 1: Add a New Block from CSV File selected.\n");
 			printf("Enter .csv filename for adding the block: ");
 			scanf("%s", filename);
-			BlockData *data;
-			data = ReadFile(filename);
+			BlockData *data = ReadFile(filename);
 			if (data == NULL)
 				break;
 
-
-			printf("\n\n");
-
 			sortTransactions(&data->info, data->NumOfTxn);
 
-			AddBlock(&chain, data);
+			// for (int i = 0; i < data->NumOfTxn; i++)
+			// {
+			// 	printf("Transaction %d:\n", i + 1);
+			// 	printf("\tSender ID: %s\n", data->info[i].senderID);
+			// 	printf("\tReceiver ID: %s\n", data->info[i].receiverID);
+			// 	printf("\tAmount: %.2f\n", data->info[i].amt);
+			// }
+
+			// Free the allocated pointer array
+			// free(transactionPtrs);
+
+			// AddBlock(&chain, data);
 			// heapsort
 			// verify check
 			// hash table wallet
