@@ -69,13 +69,25 @@ int main()
 			if (data == NULL)
 				break;
 
-			// Sort the transactions using the array of pointers
-			// sortTransactions(data, data->NumOfTxn);
-			
-			// ValidateTransactionData(data);
-			AddBlock(&chain, data);
-			mergeSort(data->info, 0, data->NumOfTxn - 1);			
+			mergeSort(data->info, 0, data->NumOfTxn - 1);	
+					
+			if(!isTxnBlockValid(data->info, data->NumOfTxn))
+			{
+				printf("\nInvalid Transactions Found!!\n");
+				printf("Block is NOT added\n");
+				free(data);
+				break;
+			};
+			/*
+				WalletPrint(); 
+				use it to print WalletInfo 
+			*/
+			printf("\nValid Transactions...\n");
 
+			updateBalance(data->info, data->NumOfTxn);
+			AddBlock(&chain, data);
+
+			printf("Block is Added Successfully!!\n");
 			
 			// Clean Up
 			free(data);

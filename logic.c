@@ -476,25 +476,26 @@ void updateMerkleRoot(BlockData *blockData)
 // hash function
 uint32_t sbj4_hash(const char *publicID)
 {
-	uint32_t hash = 0;
-	int i;
+	// uint32_t hash = 0;
+	// int i;
 
-	// Simple hash calculation
-	for (i = 9; publicID[i] != '\0'; i++)
-	{
-		hash = (hash * 37 + publicID[i]) % WALLET_TABLE_SIZE; // Prime multiplier 31
-	}
-
+	// // Simple hash calculation
+	// for (i = 9; publicID[i] != '\0'; i++)
+	// {
+	// 	hash = (hash * 37 + publicID[i]) % WALLET_TABLE_SIZE; // Prime multiplier 31
+	// }	
+	int len = strlen(publicID);
+	int v1 = publicID[len-1]-'0', v2 = publicID[len-2]-'0';
+	return v2 * 10 + v1;
 	// Return the hash value within table range
-	return hash;
 }
 
 const char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
-	"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004",
 	"public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008",
-	"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012",
 	"public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016",
-	"public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020"
+	"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004",
+	"public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020",
+	"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012"
 };
 
 WalletStorage *WalletBank = NULL;
@@ -517,19 +518,25 @@ void InitWalletStorage()
 	}
 }
 
-int ValidateTransactionData(BlockData *data)
+void WalletPrint()
 {
-	return isTxn_inblock_valid(&data->info, data->NumOfTxn) ? 1 : 0;
+	for (int i = 0; i < 20; i++)
+	{
+		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);
+		printf("public: %s balance: %f\n", WalletBank[hash].id, WalletBank[hash].balance);
+	}
+	
 }
 
-int isTxn_inblock_valid(Info **info, int n) {
+int isTxnBlockValid(Info *info, int n) 
+{	
     for (int i = 0; i < n; i++) {
-        char *senderID = info[i]->senderID;
+        char *senderID = info[i].senderID;
         float totalAmount = 0;
 
         for (int j = i; j < n; j++) {
-            if (strcmp(senderID, info[j]->senderID) == 0) {
-                totalAmount += info[j]->amt;
+            if (strcmp(senderID, info[j].senderID) == 0) {
+                totalAmount += info[j].amt;
             }
         }
 
@@ -538,11 +545,26 @@ int isTxn_inblock_valid(Info **info, int n) {
             return 0;
         }
 
-        while (i + 1 < n && strcmp(senderID, info[i + 1]->senderID) == 0) {
+        while (i + 1 < n && strcmp(senderID, info[i + 1].senderID) == 0) {
             i++;
         }
     }
     return 1;
+}
+
+void update(char* senderID, char* receiverID, float amt) {
+    unsigned int senderHash = sbj4_hash(senderID);
+    unsigned int receiverHash = sbj4_hash(receiverID);
+    WalletBank[senderHash].balance -= amt;  // Deduct from sender
+    WalletBank[receiverHash].balance += amt; //add to receiver
+    return;
+}
+
+void updateBalance(Info* info, int n) {
+    for(int i = 0; i < n; i++) {
+        update(info[i].senderID, info[i].receiverID, info[i].amt);
+    }
+    return;
 }
 
 void LookupTransaction()
@@ -562,7 +584,7 @@ void ViewAccountDetails()
 	}
 	else
 	{
-		printf("Wallet Balance: %d\n", WalletBank[hash].balance);
+		printf("Wallet Balance: %f\n", WalletBank[hash].balance);
 	}
 }
 

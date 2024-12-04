@@ -65,7 +65,7 @@ typedef struct txInfo
 typedef struct WalletStorage
 {
     char id[PUBLIC_ID_SIZE];
-    int balance;
+    float balance;
 }WalletStorage;
 
 // FUNCTION PROTOTYPES
@@ -93,8 +93,11 @@ void updateMerkleRoot(BlockData *blockData);
 
 // hashtable for Transaction Validation
 void InitWalletStorage();
-int ValidateTransactionData(BlockData *data);
-int isTxn_inblock_valid(Info **info, int n);
+int isTxnBlockValid(Info *info, int n);
+void update(char* senderID, char* receiverID, float amt);
+void updateBalance(Info* info, int n);
+// dummy variable
+void WalletPrint();
 
 // create account
 void CreateAccount();
