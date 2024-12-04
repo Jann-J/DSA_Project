@@ -39,13 +39,15 @@ int main()
 			break;
 	}*/	
 
-	int choice, index;
+	int choice, index, i;
 	char subChoice;
 	char filename[FILE_NAME_SIZE];
 	char userID[PUBLIC_ID_SIZE];
 
 	Blockchain chain;
 	init_blockchain(&chain);
+	HashTable Stable;
+	initSHashTable(&Stable);
 	InitWalletStorage();
 
 	while (1)
@@ -58,7 +60,7 @@ int main()
 		{
 		case 1:
 			ProfileMenu();
-			CreateProfileDashboard();
+			CreateProfileDashboard(Stable);
 			break;
 		case 2:
 			printf("Option 1: Add a New Block from CSV File selected.\n");
@@ -87,6 +89,11 @@ int main()
 			updateBalance(data->info, data->NumOfTxn);
 			AddBlock(&chain, data);
 
+			i = findFirstIndex(data->info, data->NumOfTxn, "public-id-0001");
+			if(i == -1) ;
+			else 
+				insertInSHashTable(i, data->NumOfTxn, data->info, &Stable);
+
 			printf("Block is Added Successfully!!\n");
 			
 			// Clean Up
@@ -98,11 +105,18 @@ int main()
 			isBlockChainValid(chain);
 			break;
 		case 4:
-			printf("Option 5: Search Transactions selected.\n");
-			printf("Enter private ID: ");
-			scanf("%s", userID);
+			//printf("Enter private ID: ");
+			//scanf("%s", userID);
 			//cmp with private id
-			//searchID
+			printf("Enter Transaction ID to be searched: ");
+			scanf("%s", userID);
+			Info *info;
+			info = searchSHashTable(&Stable, userID);
+			if(info){
+				printTransactionInfo(*info);
+			} else {
+				printf("Transaction ID not found.\n");
+			}
 			break;
 		case 5:
 			printf("Option 6: Display Block Details selected.\n");
@@ -149,5 +163,6 @@ int main()
 		getchar();
 	}
 	freeBlockchain(&chain);
+	freeSHashTable(&Stable);
 	return 0;
 }

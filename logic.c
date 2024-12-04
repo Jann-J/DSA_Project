@@ -21,6 +21,14 @@ void init_blockchain(Blockchain *chain)
 	return;
 }
 
+void initSHashTable(HashTable *table)
+{
+	for (int i = 0; i < TABLE_SIZE; i++)
+	{
+		table->buckets[i] = NULL;
+	}
+}
+
 /* takes parameters string filename and
  * read first line of header
  * stored second line for index, time, nonce, sender, reciever, itemcount in struct
@@ -147,7 +155,8 @@ BlockData *ReadFile(char *filename)
 void AddBlock(Blockchain *chain, BlockData *blockData)
 {
 	block *newBlock = (block *)malloc(sizeof(block));
-	if (newBlock == NULL){
+	if (newBlock == NULL)
+	{
 		perror("Error: Memory allocation failed.\n");
 		return;
 	}
@@ -156,10 +165,10 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	newBlock->next = NULL;
 
 	// Set the timestamp to the current time
-	blockData->timestamp = time(NULL);
+	newBlock->data.timestamp = time(NULL);
 
 	// Add Block Nonce
-	blockData->nonce = 1234;
+	newBlock->data.nonce = 1234;
 
 	updateMerkleRoot(blockData);
 	memcpy(newBlock->data.merkleRoot, blockData->merkleRoot, SHA256_DIGEST_LENGTH);
@@ -168,97 +177,36 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	if (chain->head == NULL)
 	{
 		// Genesis Block's Previous Hash Will be 0000...
-		memset(blockData->prevHash, 0, SHA256_DIGEST_LENGTH);
+		// memset(blockData->prevHash, 0, SHA256_DIGEST_LENGTH);
+
 		// Update newBlock's prevHash
-		memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
+		memset(newBlock->data.prevHash, 0, SHA256_DIGEST_LENGTH);
 		newBlock->data.index = 1;
 
 		Mineblock(blockData);
 		memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
-		newBlock->data.nonce = blockData->nonce;
+
+		// newBlock->data.nonce = blockData->nonce;
 
 		chain->head = newBlock;
 		chain->rear = newBlock;
 		printf("Block added successfully.\n");
 		return;
 	}
-
-	// Calculate hash new block
-	//memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
-	// Calculate hash new block
-	// memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
-	memcpy(blockData->prevHash, chain->rear->data.currHash, SHA256_DIGEST_LENGTH);
-	memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
+	memcpy(newBlock->data.prevHash, chain->rear->data.currHash, SHA256_DIGEST_LENGTH);
 	newBlock->data.index = chain->rear->data.index + 1;
 
-	newBlock->data.index = chain->rear->data.index + 1;
-
+	// Generate Valid Hash of Block
 	Mineblock(blockData);
-	newBlock->data.nonce = blockData->nonce;
 	memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
+
+	newBlock->data.nonce = blockData->nonce;
 
 	chain->rear->next = newBlock;
 	chain->rear = newBlock;
 
 	printf("Block added successfully.\n");
 	return;
-
-	// block *newBlock = (block *)malloc(sizeof(block));
-	// if (newBlock == NULL){
-	// 	perror("Error: Memory allocation failed.\n");
-	// 	return;
-	// }
-
-	// newBlock->data = *blockData;
-	// newBlock->next = NULL;
-
-	// // Set the timestamp to the current time
-	// blockData->timestamp = time(NULL);
-
-	// // Add Block Nonce
-	// blockData->nonce = 1234;
-
-	// updateMerkleRoot(blockData);
-	// memcpy(newBlock->data.merkleRoot, blockData->merkleRoot, SHA256_DIGEST_LENGTH);
-
-	// // Genesis block
-	// if (chain->head == NULL)
-	// {
-	// 	// Genesis Block's Previous Hash Will be 0000...
-	// 	memset(blockData->prevHash, 0, SHA256_DIGEST_LENGTH);
-	// 	// Update newBlock's prevHash
-	// 	memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
-	// 	newBlock->data.index = 1;
-
-	// 	Mineblock(blockData);
-	// 	memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
-	// 	newBlock->data.nonce = blockData->nonce;
-
-	// 	chain->head = newBlock;
-	// 	chain->rear = newBlock;
-	// 	printf("Block added successfully.\n");
-	// 	return;
-	// }
-
-	// // Calculate hash new block
-	// //memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
-	// // Calculate hash new block
-	// // memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
-	// memcpy(blockData->prevHash, chain->rear->data.currHash, SHA256_DIGEST_LENGTH);
-	// memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
-	// newBlock->data.index = chain->rear->data.index + 1;
-
-	// newBlock->data.index = chain->rear->data.index + 1;
-
-	// Mineblock(blockData);
-	// newBlock->data.nonce = blockData->nonce;
-	// memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
-
-	// chain->rear->next = newBlock;
-	// chain->rear = newBlock;
-
-	// printf("Block added successfully.\n");
-	// return;
 }
 
 void printTimestamp(time_t timestamp)
@@ -483,9 +431,9 @@ uint32_t sbj4_hash(const char *publicID)
 	// for (i = 9; publicID[i] != '\0'; i++)
 	// {
 	// 	hash = (hash * 37 + publicID[i]) % WALLET_TABLE_SIZE; // Prime multiplier 31
-	// }	
+	// }
 	int len = strlen(publicID);
-	int v1 = publicID[len-1]-'0', v2 = publicID[len-2]-'0';
+	int v1 = publicID[len - 1] - '0', v2 = publicID[len - 2] - '0';
 	return v2 * 10 + v1;
 	// Return the hash value within table range
 }
@@ -495,8 +443,7 @@ const char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
 	"public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016",
 	"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004",
 	"public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020",
-	"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012"
-};
+	"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012"};
 
 WalletStorage *WalletBank = NULL;
 
@@ -514,7 +461,7 @@ void InitWalletStorage()
 	{
 		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);
 		strcpy(WalletBank[hash].id, BLOCKCHAIN_NODES_PUBLIC_ID[i]);
-		WalletBank[hash].balance = (10000+rand()%50000);
+		WalletBank[hash].balance = (10000 + rand() % 50000);
 	}
 }
 
@@ -525,50 +472,73 @@ void WalletPrint()
 		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);
 		printf("public: %s balance: %f\n", WalletBank[hash].id, WalletBank[hash].balance);
 	}
-	
 }
 
-int isTxnBlockValid(Info *info, int n) 
-{	
-    for (int i = 0; i < n; i++) {
-        char *senderID = info[i].senderID;
-        float totalAmount = 0;
-
-        for (int j = i; j < n; j++) {
-            if (strcmp(senderID, info[j].senderID) == 0) {
-                totalAmount += info[j].amt;
-            }
-        }
-
-        unsigned int hash = sbj4_hash(senderID);
-        if (WalletBank[hash].balance < totalAmount) {
-            return 0;
-        }
-
-        while (i + 1 < n && strcmp(senderID, info[i + 1].senderID) == 0) {
-            i++;
-        }
-    }
-    return 1;
-}
-
-void update(char* senderID, char* receiverID, float amt) {
-    unsigned int senderHash = sbj4_hash(senderID);
-    unsigned int receiverHash = sbj4_hash(receiverID);
-    WalletBank[senderHash].balance -= amt;  // Deduct from sender
-    WalletBank[receiverHash].balance += amt; //add to receiver
-    return;
-}
-
-void updateBalance(Info* info, int n) {
-    for(int i = 0; i < n; i++) {
-        update(info[i].senderID, info[i].receiverID, info[i].amt);
-    }
-    return;
-}
-
-void LookupTransaction()
+int isTxnBlockValid(Info *info, int n)
 {
+	for (int i = 0; i < n; i++)
+	{
+		char *senderID = info[i].senderID;
+		float totalAmount = 0;
+
+		for (int j = i; j < n; j++)
+		{
+			if (strcmp(senderID, info[j].senderID) == 0)
+			{
+				totalAmount += info[j].amt;
+			}
+		}
+
+		unsigned int hash = sbj4_hash(senderID);
+		if (WalletBank[hash].balance < totalAmount)
+		{
+			return 0;
+		}
+
+		while (i + 1 < n && strcmp(senderID, info[i + 1].senderID) == 0)
+		{
+			i++;
+		}
+	}
+	return 1;
+}
+
+void update(char *senderID, char *receiverID, float amt)
+{
+	unsigned int senderHash = sbj4_hash(senderID);
+	unsigned int receiverHash = sbj4_hash(receiverID);
+	WalletBank[senderHash].balance -= amt;	 // Deduct from sender
+	WalletBank[receiverHash].balance += amt; // add to receiver
+	return;
+}
+
+void updateBalance(Info *info, int n)
+{
+	for (int i = 0; i < n; i++)
+	{
+		update(info[i].senderID, info[i].receiverID, info[i].amt);
+	}
+	return;
+}
+
+void loopupTable(HashTable table)
+{
+	printf("Transaction IDs are:\n");
+	int i = 0, count = 0;
+	HashNode *p;
+	while (i < TABLE_SIZE)
+	{
+		p = table.buckets[i];
+		while (p)
+		{
+			printf("%s\t\t", p->data->tnx);
+			count++;
+			p = p->next;
+		}
+		i++;
+	}
+	if (count == 0)
+		printf("No transactions done yet.\n");
 	return;
 }
 
@@ -614,7 +584,7 @@ int isAuthenticated()
 }
 
 // your profile dashboard to view transactions data
-void CreateProfileDashboard()
+void CreateProfileDashboard(HashTable table)
 {
 	int choice;
 	printf("Enter your choice: ");
@@ -623,7 +593,7 @@ void CreateProfileDashboard()
 	switch (choice)
 	{
 	case 1:
-		isAuthenticated() ? LookupTransaction() : printf("Incorrect id..\n");
+		isAuthenticated() ? loopupTable(table) : printf("Incorrect id..\n");
 		break;
 
 	case 2:
@@ -777,71 +747,188 @@ void isBlockChainValid(Blockchain B)
 // Function to merge two halves of the Info array
 void merge(Info *info, int left, int mid, int right)
 {
-    int n1 = mid - left + 1;
-    int n2 = right - mid;
+	int n1 = mid - left + 1;
+	int n2 = right - mid;
 
-    // Temporary arrays to hold data
-    Info *leftArray = (Info *)malloc(n1 * sizeof(Info));
-    Info *rightArray = (Info *)malloc(n2 * sizeof(Info));
+	// Temporary arrays to hold data
+	Info *leftArray = (Info *)malloc(n1 * sizeof(Info));
+	Info *rightArray = (Info *)malloc(n2 * sizeof(Info));
 
-    // Copy data to temporary arrays
-    for (int i = 0; i < n1; i++)
-        leftArray[i] = info[left + i];
-    for (int i = 0; i < n2; i++)
-        rightArray[i] = info[mid + 1 + i];
+	// Copy data to temporary arrays
+	for (int i = 0; i < n1; i++)
+		leftArray[i] = info[left + i];
+	for (int i = 0; i < n2; i++)
+		rightArray[i] = info[mid + 1 + i];
 
-    // Merge the temporary arrays back into info[left..right]
-    int i = 0, j = 0, k = left;
-    while (i < n1 && j < n2)
-    {
-        // Compare sender IDs
-        if (strcmp(leftArray[i].senderID, rightArray[j].senderID) <= 0)
-        {
-            info[k] = leftArray[i];
-            i++;
-        }
-        else
-        {
-            info[k] = rightArray[j];
-            j++;
-        }
-        k++;
-    }
+	// Merge the temporary arrays back into info[left..right]
+	int i = 0, j = 0, k = left;
+	while (i < n1 && j < n2)
+	{
+		// Compare sender IDs
+		if (strcmp(leftArray[i].senderID, rightArray[j].senderID) <= 0)
+		{
+			info[k] = leftArray[i];
+			i++;
+		}
+		else
+		{
+			info[k] = rightArray[j];
+			j++;
+		}
+		k++;
+	}
 
-    // Copy remaining elements of leftArray, if any
-    while (i < n1)
-    {
-        info[k] = leftArray[i];
-        i++;
-        k++;
-    }
+	// Copy remaining elements of leftArray, if any
+	while (i < n1)
+	{
+		info[k] = leftArray[i];
+		i++;
+		k++;
+	}
 
-    // Copy remaining elements of rightArray, if any
-    while (j < n2)
-    {
-        info[k] = rightArray[j];
-        j++;
-        k++;
-    }
+	// Copy remaining elements of rightArray, if any
+	while (j < n2)
+	{
+		info[k] = rightArray[j];
+		j++;
+		k++;
+	}
 
-    // Free temporary arrays
-    free(leftArray);
-    free(rightArray);
+	// Free temporary arrays
+	free(leftArray);
+	free(rightArray);
 }
 
 // Function to implement merge sort on Info array
 void mergeSort(Info *info, int left, int right)
 {
-    if (left < right)
-    {
-        // Calculate the midpoint
-        int mid = left + (right - left) / 2;
+	if (left < right)
+	{
+		// Calculate the midpoint
+		int mid = left + (right - left) / 2;
 
-        // Recursively sort the first and second halves
-        mergeSort(info, left, mid);
-        mergeSort(info, mid + 1, right);
+		// Recursively sort the first and second halves
+		mergeSort(info, left, mid);
+		mergeSort(info, mid + 1, right);
 
-        // Merge the sorted halves
-        merge(info, left, mid, right);
-    }
+		// Merge the sorted halves
+		merge(info, left, mid, right);
+	}
+}
+
+// Searchs
+int findFirstIndex(Info transactions[], int size, const char *senderID)
+{
+	int left = 0, right = size - 1;
+	int result = -1; // To store the first occurrence
+	while (left <= right)
+	{
+		int mid = left + (right - left) / 2;
+		if (strcmp(transactions[mid].senderID, senderID) == 0)
+		{
+			result = mid;	 // Update result
+			right = mid - 1; // Continue searching in the left half
+		}
+		else if (strcmp(transactions[mid].senderID, senderID) < 0)
+		{
+			left = mid + 1; // Search in the right half
+		}
+		else
+		{
+			right = mid - 1; // Search in the left half
+		}
+	}
+	return result;
+}
+
+void insertInSHashTable(int index, int numTxn, Info transactions[], HashTable *table)
+{
+	while (index < numTxn && strcmp(transactions[index].senderID, NODE_PUBLIC_ID) == 0)
+	{
+		insertTxnInfo(table, transactions, index);
+		index++;
+	}
+	return;
+}
+
+void insertTxnInfo(HashTable *table, Info *info, int i)
+{
+	unsigned int index = generateSHash(info[i].tnx);
+	HashNode *newNode = (HashNode *)malloc(sizeof(HashNode));
+	if (!newNode)
+	{
+		perror("Failed to generate allocate memory.\n");
+		return;
+	}
+
+	newNode->data = &info[i];
+	newNode->next = table->buckets[index];
+	table->buckets[index] = newNode;
+	return;
+}
+
+unsigned int generateSHash(const char *txnID)
+{
+	unsigned long hash = 0xcbf29ce484222325;	   // Large prime initial value (FNV offset basis)
+	unsigned long primeMultiplier = 0x100000001b3; // Prime multiplier (FNV prime)
+	int i;
+
+	for (i = 4; txnID[i] != '\0' && i < TNX_SIZE; i++)
+	{
+		unsigned char c;
+		if (isdigit(txnID[i]))
+		{
+			c = (unsigned char)(txnID[i] - '0');
+		}
+		else if (isalpha(txnID[i]))
+		{
+			c = (unsigned char)(toupper(txnID[i]) - 'A' + 10);
+		}
+		else
+		{
+			continue; // Skip any non-alphanumeric characters
+		}
+
+		// Update the hash with a mix of current character and previous hash
+		hash = hash ^ c;
+		hash = (hash * primeMultiplier) % TABLE_SIZE; // Apply modulus to fit table size
+	}
+
+	// Final mixing step for better bit diffusion
+	hash ^= (hash >> 33);
+	hash *= primeMultiplier;
+	hash ^= (hash >> 33);
+
+	hash = hash % TABLE_SIZE; // Ensure hash is within table range
+
+	return (unsigned int)hash;
+}
+
+Info *searchSHashTable(HashTable *table, const char *txnID)
+{
+	unsigned int index = generateSHash(txnID);
+	HashNode *current = table->buckets[index];
+
+	while (current)
+	{
+		printf("%s\n", current->data->tnx);
+		printf("%s\n", txnID);
+		if (strcmp(current->data->tnx, txnID) == 0)
+		{
+			printf("yes\n");
+			return current->data;
+		}
+		current = current->next;
+	}
+	return NULL;
+}
+
+void printTransactionInfo(Info info)
+{
+	printf("Here are detials:\n");
+	printf("TransactionID: %s\n", info.tnx);
+	printf("SenderID: %s\n", info.senderID);
+	printf("TransactionID: %s\n", info.receiverID);
+	printf("TransactionID: %.2f\n", info.amt);
+	return;
 }

@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>
+#include<ctype.h>
 #define NAME_SIZE 50
 #define MAX_LINE 128
 #define SHA256_DIGEST_LENGTH 32
 #define PUBLIC_ID_SIZE 32
 #define MAX_NODES_IN_BLOCKCHAIN 30
-#define TNX_SIZE 16
+#define TNX_SIZE 17
 #define TABLE_SIZE 101
 #define WALLET_TABLE_SIZE 31
 #define DIFFICULTY 2
@@ -106,6 +107,7 @@ void CreateAccount();
 void ProfileMenu();
 void CreateProfileDashboard();
 int isAuthenticated();
+void loopupTable(HashTable table);
 
 //Mining function prototypes
 void Mineblock(BlockData *blockData);
@@ -118,3 +120,15 @@ void isBlockChainValid(Blockchain B);
 // Merge Sort
 void mergeSort(Info *info, int left, int right);
 void merge(Info *info, int left, int mid, int right);
+
+//Search userID
+int findFirstIndex(Info transactions[], int size, const char *senderID);
+void insertInSHashTable(int index, int numTxn, Info transactions[], HashTable *table);
+
+//Search Hash Table
+void initSHashTable(HashTable *table);
+unsigned int generateSHash(const char *txnID);
+void insertTxnInfo(HashTable *table, Info *info, int index);
+Info *searchSHashTable(HashTable *table, const char *txnID);
+void freeSHashTable(HashTable *table);
+void printTransactionInfo(Info info);
