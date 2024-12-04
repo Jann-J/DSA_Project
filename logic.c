@@ -11,8 +11,7 @@
 
 // constant global variables to store login credentials
 char NODE_PUBLIC_ID[PUBLIC_ID_SIZE] = "public-id-0001";
-// char NODE_PRIVATE_ID[PUBLIC_ID_SIZE] = "private-id-A1B2C3D4";
-char NODE_PRIVATE_ID[PUBLIC_ID_SIZE] = "private";
+char NODE_PRIVATE_ID[PUBLIC_ID_SIZE] = "private-id-A1B2C3D4";
 
 /* Initialises Blockchain */
 void init_blockchain(Blockchain *chain)
@@ -203,6 +202,63 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 
 	printf("Block added successfully.\n");
 	return;
+
+	// block *newBlock = (block *)malloc(sizeof(block));
+	// if (newBlock == NULL){
+	// 	perror("Error: Memory allocation failed.\n");
+	// 	return;
+	// }
+
+	// newBlock->data = *blockData;
+	// newBlock->next = NULL;
+
+	// // Set the timestamp to the current time
+	// blockData->timestamp = time(NULL);
+
+	// // Add Block Nonce
+	// blockData->nonce = 1234;
+
+	// updateMerkleRoot(blockData);
+	// memcpy(newBlock->data.merkleRoot, blockData->merkleRoot, SHA256_DIGEST_LENGTH);
+
+	// // Genesis block
+	// if (chain->head == NULL)
+	// {
+	// 	// Genesis Block's Previous Hash Will be 0000...
+	// 	memset(blockData->prevHash, 0, SHA256_DIGEST_LENGTH);
+	// 	// Update newBlock's prevHash
+	// 	memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
+	// 	newBlock->data.index = 1;
+
+	// 	Mineblock(blockData);
+	// 	memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
+	// 	newBlock->data.nonce = blockData->nonce;
+
+	// 	chain->head = newBlock;
+	// 	chain->rear = newBlock;
+	// 	printf("Block added successfully.\n");
+	// 	return;
+	// }
+
+	// // Calculate hash new block
+	// //memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
+	// // Calculate hash new block
+	// // memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
+	// memcpy(blockData->prevHash, chain->rear->data.currHash, SHA256_DIGEST_LENGTH);
+	// memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
+	// newBlock->data.index = chain->rear->data.index + 1;
+
+	// newBlock->data.index = chain->rear->data.index + 1;
+
+	// Mineblock(blockData);
+	// newBlock->data.nonce = blockData->nonce;
+	// memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
+
+	// chain->rear->next = newBlock;
+	// chain->rear = newBlock;
+
+	// printf("Block added successfully.\n");
+	// return;
 }
 
 void printTimestamp(time_t timestamp)
@@ -426,23 +482,24 @@ uint32_t sbj4_hash(const char *publicID)
 	// Simple hash calculation
 	for (i = 9; publicID[i] != '\0'; i++)
 	{
-		hash = (hash * 37 + publicID[i]) % TABLE_SIZE; // Prime multiplier 31
+		hash = (hash * 37 + publicID[i]) % WALLET_TABLE_SIZE; // Prime multiplier 31
 	}
 
 	// Return the hash value within table range
 	return hash;
 }
 
-char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
+const char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
 	"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004",
 	"public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008",
 	"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012",
 	"public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016",
-	"public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020"};
+	"public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020"
+};
 
 WalletStorage *WalletBank = NULL;
 
-void CreatesNodesWithRandomBalance()
+void InitWalletStorage()
 {
 	WalletBank = (WalletStorage *)malloc(sizeof(WalletStorage) * MAX_NODES_IN_BLOCKCHAIN);
 	if (!WalletBank)
@@ -456,47 +513,36 @@ void CreatesNodesWithRandomBalance()
 	{
 		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);
 		strcpy(WalletBank[hash].id, BLOCKCHAIN_NODES_PUBLIC_ID[i]);
-		WalletBank[hash].balance = i + 2000;
+		WalletBank[hash].balance = (10000+rand()%50000);
 	}
 }
 
-// validate transaction
-txInfo *InputTransactionData()
+int ValidateTransactionData(BlockData *data)
 {
-	txInfo *newtx = (txInfo *)malloc(sizeof(txInfo));
-	if (newtx == NULL)
-	{
-		printf("Memory allocation failed!\n");
-		return NULL;
-	}
-
-	printf("Enter your PUBLIC ID : ");
-	scanf("%s", newtx->id);
-
-	printf("Enter sender's name: ");
-	scanf("%s", newtx->sender);
-
-	printf("Enter receiver's name: ");
-	scanf("%s", newtx->receiver);
-
-	printf("Enter transaction amount: ");
-	scanf("%u", &newtx->txBalance);
-
-	return newtx;
+	return isTxn_inblock_valid(&data->info, data->NumOfTxn) ? 1 : 0;
 }
 
-int ValidateTransactionData(txInfo *newtx)
-{
-	uint32_t hash;
-	hash = sbj4_hash(newtx->id);
+int isTxn_inblock_valid(Info **info, int n) {
+    for (int i = 0; i < n; i++) {
+        char *senderID = info[i]->senderID;
+        float totalAmount = 0;
 
-	// if user has more than transaction return true else false
-	if (WalletBank[hash].balance >= newtx->txBalance)
-	{
-		WalletBank[hash].balance -= newtx->txBalance;
-		return 1;
-	}
-	return 0;
+        for (int j = i; j < n; j++) {
+            if (strcmp(senderID, info[j]->senderID) == 0) {
+                totalAmount += info[j]->amt;
+            }
+        }
+
+        unsigned int hash = sbj4_hash(senderID);
+        if (WalletBank[hash].balance < totalAmount) {
+            return 0;
+        }
+
+        while (i + 1 < n && strcmp(senderID, info[i + 1]->senderID) == 0) {
+            i++;
+        }
+    }
+    return 1;
 }
 
 void LookupTransaction()
@@ -608,7 +654,6 @@ void Mineblock(BlockData *blockData)
 }
 
 // Checking the hash is valid or not according to difficulty/
-
 int isHashValid(unsigned char *hash)
 {
 	char prefix[DIFFICULTY + 1];
@@ -706,127 +751,75 @@ void isBlockChainValid(Blockchain B)
 	return;
 }
 
-/*
- * Parameters: pointers to two `Info` structs
- * 	      (`Info **a`, `Info **b`)
- * Function: Swaps the values of the two pointers
- * to effectively swap the structs they point to
- * Return value: None
- */
-void swap(Info **a, Info **b)
+// Merge Sort
+// Function to merge two halves of the Info array
+void merge(Info *info, int left, int mid, int right)
 {
-	Info *temp = *a;
-	*a = *b;
-	*b = temp;
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    // Temporary arrays to hold data
+    Info *leftArray = (Info *)malloc(n1 * sizeof(Info));
+    Info *rightArray = (Info *)malloc(n2 * sizeof(Info));
+
+    // Copy data to temporary arrays
+    for (int i = 0; i < n1; i++)
+        leftArray[i] = info[left + i];
+    for (int i = 0; i < n2; i++)
+        rightArray[i] = info[mid + 1 + i];
+
+    // Merge the temporary arrays back into info[left..right]
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2)
+    {
+        // Compare sender IDs
+        if (strcmp(leftArray[i].senderID, rightArray[j].senderID) <= 0)
+        {
+            info[k] = leftArray[i];
+            i++;
+        }
+        else
+        {
+            info[k] = rightArray[j];
+            j++;
+        }
+        k++;
+    }
+
+    // Copy remaining elements of leftArray, if any
+    while (i < n1)
+    {
+        info[k] = leftArray[i];
+        i++;
+        k++;
+    }
+
+    // Copy remaining elements of rightArray, if any
+    while (j < n2)
+    {
+        info[k] = rightArray[j];
+        j++;
+        k++;
+    }
+
+    // Free temporary arrays
+    free(leftArray);
+    free(rightArray);
 }
 
-/*
- * Parameters: `Info **array`: An array of pointers to `Info` structs
- * 	      `int n`: The size of the heap (or array)
- *	      `int i`: The index of the current node being heapified
- * Function: Ensures the max-heap property for the node at index `i`
- * by comparing it with its left and right children. If a child is larger,
- * the node swaps places with the larger child, and the function is recursively called on the child.
- * Return value: None
- */
-void heapify(Info **array, int n, int i)
+// Function to implement merge sort on Info array
+void mergeSort(Info *info, int left, int right)
 {
-	int largest, left, right;
-	largest = i;
-	left = 2 * i + 1;
-	right = 2 * i + 2;
+    if (left < right)
+    {
+        // Calculate the midpoint
+        int mid = left + (right - left) / 2;
 
-	// Compare left child with root
-	if (left < n && strcmp(array[left]->senderID, array[largest]->senderID) > 0)
-	{
-		largest = left;
-	}
+        // Recursively sort the first and second halves
+        mergeSort(info, left, mid);
+        mergeSort(info, mid + 1, right);
 
-	// Compare right child with the largest so far
-	if (right < n && strcmp(array[right]->senderID, array[largest]->senderID) > 0)
-	{
-		largest = right;
-	}
-
-	// Swap and continue heapifying if root is not the largest
-	if (largest != i)
-	{
-		swap(&array[i], &array[largest]);
-		heapify(array, n, largest);
-	}
-	return;
-}
-
-/*
- * Parameters: `Info **array`: An array of pointers to `Info` structs
- *	      `int n`: The size of the array
- * Function: Sorts the array in ascending order of `senderID` using heapsort.
- * First, the heap is built by heapifying all nodes. Then, the largest element (root of the heap)
- * is swapped with the last element, and the heap size is reduced for the next iteration.
- * Return value: None
- */
-void heapSort(Info **array, int n)
-{
-	// Build the heap
-	for (int i = n / 2 - 1; i >= 0; i--)
-	{
-		heapify(array, n, i);
-	}
-
-	// Extract elements from heap one by one
-	for (int i = n - 1; i > 0; i--)
-	{
-		swap(&array[0], &array[i]);
-		heapify(array, i, 0);
-	}
-}
-
-/* Parameters: `Info **transactions`: An array of pointers to `Info` structs
- * 	       `int n`: The size of the array
- * Function: A wrapper function for heapsort that sorts transactions based on `senderID`.
- * Return value: None
- */
-void sortTransactions(BlockData *data, int n)
-{
-	// Create an array of pointers to `Info` structs
-	Info **tnxPointers = (Info **)malloc(sizeof(Info *) * n);
-	if (tnxPointers == NULL)
-	{
-		fprintf(stderr, "Error: Memory allocation failed for transaction pointers.\n");
-		free(data->info);
-		free(data);
-		return;
-	}
-
-	// Populate the array of pointers
-	for (int i = 0; i < n; i++)
-	{
-		tnxPointers[i] = &data->info[i];
-	}
-
-	// Perform heap sort on the array of pointers
-	heapSort(tnxPointers, n);
-
-	// Reorder the original `data->info` array based on the sorted pointers
-	Info *sortedData = (Info *)malloc(sizeof(Info) * n);
-	if (sortedData == NULL)
-	{
-		fprintf(stderr, "Error: Memory allocation failed for sorted data.\n");
-		free(tnxPointers);
-		free(data->info);
-		free(data);
-		return;
-	}
-
-	for (int i = 0; i < n; i++)
-	{
-		sortedData[i] = *tnxPointers[i];
-	}
-
-	// Replace the original data with the sorted data
-	free(data->info);
-	data->info = sortedData;
-
-	// Clean up
-	free(tnxPointers);
+        // Merge the sorted halves
+        merge(info, left, mid, right);
+    }
 }

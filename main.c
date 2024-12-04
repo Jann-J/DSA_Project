@@ -46,6 +46,8 @@ int main()
 
 	Blockchain chain;
 	init_blockchain(&chain);
+	InitWalletStorage();
+
 	while (1)
 	{
 		displayMenu();
@@ -69,8 +71,11 @@ int main()
 
 			// Sort the transactions using the array of pointers
 			// sortTransactions(data, data->NumOfTxn);
-
+			
+			// ValidateTransactionData(data);
 			AddBlock(&chain, data);
+			mergeSort(data->info, 0, data->NumOfTxn - 1);			
+
 			
 			// Clean Up
 			free(data);

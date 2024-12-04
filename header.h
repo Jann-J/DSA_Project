@@ -8,6 +8,7 @@
 #define MAX_NODES_IN_BLOCKCHAIN 30
 #define TNX_SIZE 16
 #define TABLE_SIZE 101
+#define WALLET_TABLE_SIZE 31
 #define DIFFICULTY 2
 
 // networking
@@ -91,9 +92,9 @@ unsigned char *constructMerkleTree(Info *info, size_t TxnCount);
 void updateMerkleRoot(BlockData *blockData);
 
 // hashtable for Transaction Validation
-void CreatesNodesWithRandomBalance();
-txInfo *InputTransactionData();
-int ValidateTransactionData(txInfo* newtx);
+void InitWalletStorage();
+int ValidateTransactionData(BlockData *data);
+int isTxn_inblock_valid(Info **info, int n);
 
 // create account
 void CreateAccount();
@@ -108,8 +109,9 @@ void Mineblock(BlockData *blockData);
 int isHashValid(unsigned char *hash);
 unsigned char *calculateHashForBlock(BlockData *blockData);
 
-//block chain validation 
+//block chain validation
 void isBlockChainValid(Blockchain B);
 
-// Heap Sort
-void sortTransactions( BlockData *data, int n);
+// Merge Sort
+void mergeSort(Info *info, int left, int right);
+void merge(Info *info, int left, int mid, int right);
