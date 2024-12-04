@@ -11,7 +11,8 @@
 
 // constant global variables to store login credentials
 char NODE_PUBLIC_ID[PUBLIC_ID_SIZE] = "public-id-0001";
-char NODE_PRIVATE_ID[PUBLIC_ID_SIZE] = "private-id-A1B2C3D4";
+// char NODE_PRIVATE_ID[PUBLIC_ID_SIZE] = "private-id-A1B2C3D4";
+char NODE_PRIVATE_ID[PUBLIC_ID_SIZE] = "private";
 
 /* Initialises Blockchain */
 void init_blockchain(Blockchain *chain)
@@ -162,6 +163,7 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	blockData->nonce = 1234;
 
 	updateMerkleRoot(blockData);
+	memcpy(newBlock->data.merkleRoot, blockData->merkleRoot, SHA256_DIGEST_LENGTH);
 
 	// Genesis block
 	if (chain->head == NULL)
@@ -171,7 +173,11 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 		// Update newBlock's prevHash
 		memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
 		newBlock->data.index = 1;
+
 		Mineblock(blockData);
+		memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
+		newBlock->data.nonce = blockData->nonce;
+
 		chain->head = newBlock;
 		chain->rear = newBlock;
 		printf("Block added successfully.\n");
@@ -180,11 +186,17 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 
 	// Calculate hash new block
 	//memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
+	// Calculate hash new block
+	// memcpy(blockData->currHash, calculateHashForBlock(blockData), SHA256_DIGEST_LENGTH);
 	memcpy(blockData->prevHash, chain->rear->data.currHash, SHA256_DIGEST_LENGTH);
 	memcpy(newBlock->data.prevHash, blockData->prevHash, SHA256_DIGEST_LENGTH);
 	newBlock->data.index = chain->rear->data.index + 1;
 
+	newBlock->data.index = chain->rear->data.index + 1;
+
 	Mineblock(blockData);
+	newBlock->data.nonce = blockData->nonce;
+	memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
 
 	chain->rear->next = newBlock;
 	chain->rear = newBlock;
@@ -406,13 +418,19 @@ void updateMerkleRoot(BlockData *blockData)
 }
 
 // hash function
-uint32_t sbj4_hash(char *key)
+uint32_t sbj4_hash(const char *publicID)
 {
-	int len = strlen(key);
-	char value[3];
-	value[0] = key[len - 2], value[1] = key[len - 1], value[2] = '\0';
-	int combined = atoi(value);
-	return combined;
+	uint32_t hash = 0;
+	int i;
+
+	// Simple hash calculation
+	for (i = 9; publicID[i] != '\0'; i++)
+	{
+		hash = (hash * 37 + publicID[i]) % TABLE_SIZE; // Prime multiplier 31
+	}
+
+	// Return the hash value within table range
+	return hash;
 }
 
 char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
@@ -481,8 +499,6 @@ int ValidateTransactionData(txInfo *newtx)
 	return 0;
 }
 
-
-
 void LookupTransaction()
 {
 	return;
@@ -508,19 +524,21 @@ int isAuthenticated()
 {
 	char private_id[PUBLIC_ID_SIZE];
 	char public_id[PUBLIC_ID_SIZE];
-	
+
 	printf("Enter your Public ID: ");
 	scanf("%s", public_id);
 
-	if(strcmp(public_id, NODE_PUBLIC_ID) != 0){
+	if (strcmp(public_id, NODE_PUBLIC_ID) != 0)
+	{
 		printf("Incorrect credentials. Try again.\n");
 		return 0;
 	}
-	
+
 	printf("Enter your Private ID: ");
 	scanf("%s", private_id);
 
-	if(strcmp(private_id, NODE_PRIVATE_ID) != 0){
+	if (strcmp(private_id, NODE_PRIVATE_ID) != 0)
+	{
 		printf("Incorrect credentials. Try again.\n");
 		return 0;
 	}
@@ -575,7 +593,9 @@ void Mineblock(BlockData *blockData)
 		if (isHashValid(hash))
 		{
 			printf("Hash is Valid\n");
-			strcpy((char *)blockData->currHash, (char *)hash);
+			printHash(hash);
+			printf("%d ", i);
+			memcpy(blockData->currHash, hash, SHA256_DIGEST_LENGTH);
 			break;
 		}
 		else
@@ -599,7 +619,9 @@ int isHashValid(unsigned char *hash)
 	prefix[DIFFICULTY] = '\0';
 
 	if (strncmp((char *)hash, prefix, DIFFICULTY) == 0)
+	{
 		return 1;
+	}
 	else
 		return 0;
 }

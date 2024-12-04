@@ -68,7 +68,7 @@ int main()
 				break;
 
 			// Sort the transactions using the array of pointers
-			sortTransactions(data, data->NumOfTxn);
+			// sortTransactions(data, data->NumOfTxn);
 
 			AddBlock(&chain, data);
 			
