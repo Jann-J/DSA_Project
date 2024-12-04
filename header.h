@@ -101,6 +101,7 @@ void CreateAccount();
 // your profile
 void ProfileMenu();
 void CreateProfileDashboard();
+int isAuthenticated();
 
 //Mining function prototypes
 void Mineblock(BlockData *blockData);

@@ -9,6 +9,10 @@
 #include <time.h>
 #include "header.h"
 
+// constant global variables to store login credentials
+char NODE_PUBLIC_ID[PUBLIC_ID_SIZE] = "public-id-0001";
+char NODE_PRIVATE_ID[PUBLIC_ID_SIZE] = "private-id-A1B2C3D4";
+
 /* Initialises Blockchain */
 void init_blockchain(Blockchain *chain)
 {
@@ -478,17 +482,7 @@ int ValidateTransactionData(txInfo *newtx)
 	return 0;
 }
 
-// create global variables to store node credentials
-char NODE_PUBLIC_ID[PUBLIC_ID_SIZE];
-char NODE_PRIVATE_ID[PUBLIC_ID_SIZE];
 
-int isAuthenticated()
-{
-	char private_id[PUBLIC_ID_SIZE];
-	printf("Enter your Private ID: ");
-	scanf("%s", private_id);
-	return (strcmp(private_id, NODE_PRIVATE_ID) == 0) ? 1 : 0;
-}
 
 void LookupTransaction()
 {
@@ -511,21 +505,27 @@ void ViewAccountDetails()
 	}
 }
 
-void CreateAccount()
+int isAuthenticated()
 {
-	printf("Create a New Account\n");
-	printf("---------------------\n");
+	char private_id[PUBLIC_ID_SIZE];
+	char public_id[PUBLIC_ID_SIZE];
+	
+	printf("Enter your Public ID: ");
+	scanf("%s", public_id);
 
-	printf("Enter your public id: ");
-	scanf("%s", NODE_PUBLIC_ID);
+	if(strcmp(public_id, NODE_PUBLIC_ID) != 0){
+		printf("Incorrect credentials. Try again.\n");
+		return 0;
+	}
+	
+	printf("Enter your Private ID: ");
+	scanf("%s", private_id);
 
-	printf("Enter your private id: ");
-	scanf("%s", NODE_PRIVATE_ID);
-
-	printf("\nAccount created successfully!\n");
-	printf("Public ID: %s\n", NODE_PUBLIC_ID);
-	printf("Private ID: %s\n", NODE_PRIVATE_ID);
-	return;
+	if(strcmp(private_id, NODE_PRIVATE_ID) != 0){
+		printf("Incorrect credentials. Try again.\n");
+		return 0;
+	}
+	return 1;
 }
 
 // your profile dashboard to view transactions data

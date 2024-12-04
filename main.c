@@ -41,11 +41,10 @@ void ProfileMenu()
 
 int main()
 {
-	// Login To Your Account
-	CreateAccount();
-
-	// Give Random Wallete Balance to Nodes
-	CreatesNodesWithRandomBalance();
+	while(1){
+		if(isAuthenticated())
+			break;
+	}	
 
 	int choice, index;
 	char subChoice;
@@ -73,6 +72,8 @@ int main()
 			// Sort the transactions using the array of pointers
 			sortTransactions(data, data->NumOfTxn);
 
+			AddBlock(&chain, data);
+			
 			// Clean Up
 			free(data);
 			break;
