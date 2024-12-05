@@ -93,7 +93,8 @@ int main()
 			if(i == -1) ;
 			else 
 				insertInSHashTable(i, data->NumOfTxn, data->info, &Stable);
-			
+
+			insertInRHashTable(data->NumOfTxn, data->info, &Stable);
 			// Clean Up
 			free(data);
 			break;

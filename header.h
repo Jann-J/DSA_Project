@@ -10,7 +10,7 @@
 #define TNX_SIZE 17
 #define TABLE_SIZE 101
 #define WALLET_TABLE_SIZE 31
-#define DIFFICULTY 2
+#define DIFFICULTY 3
 
 // networking
 #include "peer.h"
@@ -124,6 +124,7 @@ void merge(Info *info, int left, int mid, int right);
 //Search userID
 int findFirstIndex(Info transactions[], int size, const char *senderID);
 void insertInSHashTable(int index, int numTxn, Info transactions[], HashTable *table);
+void insertInRHashTable(int numTxn, Info transactions[], HashTable *table);
 
 //Search Hash Table
 void initSHashTable(HashTable *table);

@@ -13,6 +13,24 @@
 char NODE_PUBLIC_ID[PUBLIC_ID_SIZE] = "public-id-0001";
 char NODE_PRIVATE_ID[PUBLIC_ID_SIZE] = "private-id-A1B2C3D4";
 
+// Hardcoded array of Nodes in Blockchain
+const char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
+		"public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008",
+		"public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016",
+		"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004",
+		"public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020",
+		"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012"
+	};
+
+// Initial balance corresponding to the hardcoded public IDs
+float init_balance[20] =
+	{
+		45678.34, 23567.89, 58912.45, 30012.78, 48005.65,
+		21987.44, 34899.12, 56000.50, 41023.89, 60000.00,
+		22000.12, 45987.56, 32000.34, 58000.78, 26000.45,
+		54000.23, 39000.56, 49999.99, 28000.67, 53000.45
+	};
+
 /* Initialises Blockchain */
 void init_blockchain(Blockchain *chain)
 {
@@ -31,7 +49,7 @@ void initSHashTable(HashTable *table)
 
 /* takes parameters string filename and
  * read first line of header
- * stored second line for index, time, nonce, sender, reciever, itemcount in struct
+ * stored second line for index, time, nonce, sender, receiver, itemcount in struct
  * stored item information like itemname, amount, quantity in struct
  * returns the struct BlockData read from file */
 BlockData *ReadFile(char *filename)
@@ -183,7 +201,7 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 		memset(newBlock->data.prevHash, 0, SHA256_DIGEST_LENGTH);
 		newBlock->data.index = 1;
 
-		// Mine Block 
+		// Mine Block
 		printf("Start Mining...\n");
 
 		Mineblock(blockData);
@@ -425,22 +443,6 @@ uint32_t sbj4_hash(const char *publicID)
 // Wallet storage for maintaining user balances
 WalletStorage *WalletBank = NULL;
 
-// Hardcoded array of Nodes in Blockchain
-const char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
-	"public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008",
-	"public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016",
-	"public-id-0001", "public-id-0002", "public-id-0003", "public-id-0004",
-	"public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020",
-	"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012"};
-
-// Initial balance corresponding to the hardcoded public IDs
-float init_balance[20] =
-	{
-		45678.34, 23567.89, 58912.45, 30012.78, 48005.65,
-		21987.44, 34899.12, 56000.50, 41023.89, 60000.00,
-		22000.12, 45987.56, 32000.34, 58000.78, 26000.45,
-		54000.23, 39000.56, 49999.99, 28000.67, 53000.45};
-
 // Initialize Wallet Storage with hardcoded public IDs and balances
 void InitWalletStorage()
 {
@@ -623,7 +625,7 @@ void CreateProfileDashboard(HashTable table)
 
 /* Logic :
 	1. Mining function will generate the valid hash for the given block and change the currhash field of blockData
-	2. 1st converting the iteration number i into hex string and consider this string as the nonce.
+	2. Initializing iteration number as nonce of the blockdata
 	3. Then calculating the hash by using calculateHash function.
 	4. If Hash is valid then mining is completed => copy the hash into blockData->hash and return.
 	5 else increment iteration number and step 2.
@@ -655,31 +657,37 @@ void Mineblock(BlockData *blockData)
 // Checking the hash is valid or not according to difficulty/
 int isHashValid(unsigned char *hash)
 {
-	char prefix[DIFFICULTY + 1];
+	/*char prefix[DIFFICULTY + 1];
 	for (int i = 0; i < DIFFICULTY; i++)
 	{
 		prefix[i] = 0;
 	}
-	prefix[DIFFICULTY] = '\0';
+	prefix[DIFFICULTY] = '\0';*/
 
-	if (strncmp((char *)hash, prefix, DIFFICULTY) == 0)
+	/*if (strncmp((char *)hash, prefix, DIFFICULTY) == 0)
 	{
 		return 1;
+	}*/
+	for(int i = 0; i < DIFFICULTY; i++) {
+		if(hash[i] == 0) {
+			continue;
+		}
+		else {
+			return 0;
+		}
 	}
-	else
-		return 0;
+	return 1;
 }
 
 /*Calculating hash:
-	1. first concatinating in
-	dex, timestamp, prevhash, merkleroot, nonce.
+	1. first concatinating index, timestamp, prevhash, merkleroot, nonce.
 	2. generate the hash using sha256 and return that string.
-	##note: memory is malloced in sha256, have to free that memory ==> freed in Mineblock   where to free hash??*/
+	##note: memory is malloced in sha256, have to free that memory ==> freed in Mineblock where to free hash??*/
 
 unsigned char *calculateHashForBlock(BlockData *blockData)
 {
 	char record[256];
-	snprintf(record, sizeof(record), "%u%ld%s%s%u", blockData->index, blockData->timestamp, blockData->prevHash, blockData->merkleRoot, blockData->nonce);
+	snprintf(record, sizeof(record), "%u%ld%s%s%u", blockData->index,blockData->timestamp, blockData->prevHash, blockData->merkleRoot, blockData->nonce);
 	unsigned char *outputhash = (unsigned char *)malloc(sizeof(unsigned char) * SHA256_DIGEST_LENGTH);
 	computeSHA256((const char *)record, outputhash);
 	return outputhash;
@@ -852,6 +860,16 @@ void insertInSHashTable(int index, int numTxn, Info transactions[], HashTable *t
 {
 	while (index < numTxn && strcmp(transactions[index].senderID, NODE_PUBLIC_ID) == 0)
 	{
+		insertTxnInfo(table, transactions, index);
+		index++;
+	}
+	return;
+}
+
+void insertInRHashTable(int numTxn, Info transactions[], HashTable *table){
+	int index = 0;
+	while(index < numTxn) {
+		if(strcmp(transactions[index].receiverID, NODE_PUBLIC_ID) == 0)
 		insertTxnInfo(table, transactions, index);
 		index++;
 	}

@@ -1,5 +1,6 @@
 #include "header.h"
 
+// Struct to store arguments for the receive thread
 ThreadArguments *StoreReceiveThreadArgs(int server_fd, char *blockname)
 {
     ThreadArguments *arg = (ThreadArguments *)malloc(sizeof(ThreadArguments));
@@ -8,10 +9,10 @@ ThreadArguments *StoreReceiveThreadArgs(int server_fd, char *blockname)
     return arg;
 }
 
+// Main function to establish a P2P network connection
 int P2P_NetworkConnection(char *blockname)
 {
-    int PORT = 8080;
-
+    int PORT = 8080; // Port for incoming connections
     int server_fd;
     struct sockaddr_in address;
 
@@ -34,20 +35,19 @@ int P2P_NetworkConnection(char *blockname)
         exit(EXIT_FAILURE);
     }
 
-    // Listen for incoming connections
+    // Start listening for incoming connections
     if (listen(server_fd, 5) < 0)
     {
         perror("Listen failed");
         exit(EXIT_FAILURE);
     }
 
-    // Create a thread to handle incoming connections
-    // This thread handles receiving connections on network ports
-    // It works as server in p2p connection
+    // Start a thread to handle incoming connections
     pthread_t tid;
     ThreadArguments *thread_arg = StoreReceiveThreadArgs(server_fd, blockname);
     pthread_create(&tid, NULL, receive_thread, thread_arg);
 
+    // Display user menu for sending files or quitting
     printf("\n*****At any point, press the following:*****\n");
     printf("1. Send file\n");
     printf("0. Quit\n");
@@ -61,16 +61,20 @@ int P2P_NetworkConnection(char *blockname)
         switch (choice)
         {
         case 1:
+            // Handle file sending
             sending(blockname);
             break;
         case 0:
+            // Exit the program
             printf("\nExiting\n");
             break;
         default:
+            // Handle invalid input
             printf("\nInvalid choice\n");
         }
     } while (choice != 0);
 
+    // Clean up and close the server socket
     close(server_fd);
     return 0;
 }
@@ -86,6 +90,8 @@ void send_file(int socketFD, char blockname[])
     }
 
     char data[BUFFER_SIZE] = {0};
+
+    // Read file data and send over socket
     while (fgets(data, BUFFER_SIZE, fp) != NULL)
     {
         if (send(socketFD, data, sizeof(data), 0) == -1)
@@ -93,17 +99,17 @@ void send_file(int socketFD, char blockname[])
             perror("Error in sending data");
             exit(EXIT_FAILURE);
         }
-        bzero(data, BUFFER_SIZE);
+        bzero(data, BUFFER_SIZE); // Clear buffer after sending
     }
-    fclose(fp);
+    fclose(fp); // Close the file
 }
 
-// Function to send files to multiple ports
+// Function to send files to multiple peers
 void sending(char *blockname)
 {
-    int PORT_LIST[] = {8081, 8082};
+    int PORT_LIST[] = {8081, 8082}; // List of ports to send the file
     int ports_len = sizeof(PORT_LIST) / sizeof(PORT_LIST[0]);
-    char ip_address[INET_ADDRSTRLEN] = "127.0.0.1";
+    char ip_address[INET_ADDRSTRLEN] = "127.0.0.1"; // Localhost IP
 
     for (int i = 0; i < ports_len; i++)
     {
@@ -137,17 +143,18 @@ void sending(char *blockname)
 
         // Send the file
         send_file(sock, blockname);
-        close(sock);
+        close(sock); // Close the socket after sending
     }
 }
 
 // Thread function to handle incoming connections
 void *receive_thread(void *args)
 {
-
     ThreadArguments *arg = (ThreadArguments *)args;
     int server_fd = arg->server_fd;
     char *blockname = arg->blockname;
+
+    // Start receiving files
     receiving(server_fd, blockname);
     pthread_exit(NULL);
 }
@@ -181,15 +188,15 @@ void write_file(int client_socket_fd, char *blockname)
     fclose(fp);
 }
 
-// Function to receive files from connected clients
+// Function to handle incoming connections and receive files
 void receiving(int server_fd, char *blockname)
 {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     fd_set current_sockets, ready_sockets;
 
-    FD_ZERO(&current_sockets);
-    FD_SET(server_fd, &current_sockets);
+    FD_ZERO(&current_sockets);           // Clear socket set
+    FD_SET(server_fd, &current_sockets); // Add server socket to set
 
     while (1)
     {
@@ -215,13 +222,14 @@ void receiving(int server_fd, char *blockname)
                         perror("Accept failed");
                         exit(EXIT_FAILURE);
                     }
-                    FD_SET(client_socket, &current_sockets);
+                    FD_SET(client_socket, &current_sockets); // Add new socket to set
                 }
                 else
                 {
+                    // Handle data from a connected client
                     write_file(i, blockname);
-                    close(i);
-                    FD_CLR(i, &current_sockets);
+                    close(i);                    // Close client socket after handling
+                    FD_CLR(i, &current_sockets); // Remove socket from set
                 }
             }
         }
