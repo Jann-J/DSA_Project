@@ -1,11 +1,27 @@
 # DSA_Project
 
-Requirements:
-Before running the project, make sure the following software and libraries are installed:
-1. OpenSSL (for SHA256 hashing)
-2. C Compiler (GCC recommended)
+<b>Requirements<b>
 
-for <b>OpenSSL installation</b><br>
-$sudo apt-get install libssl-dev<br>
-To use libraries<br>
--lssl -lcrypto flags are necessary when compiling your C program with OpenSSL.
+Before running the project, ensure the following software and libraries are installed on your system:
+
+    C Compiler: GCC is recommended.
+    OpenSSL Library: Required for SHA256 hashing.
+
+<b>Install OpenSSL<b>
+
+To install the OpenSSL library on Ubuntu, run:
+
+sudo apt-get install libssl-dev
+
+<b>How to Compile and Run<b>
+
+    Clone the repository or download the project files.
+    Open a terminal and navigate to the project directory.
+    Compile the project using the following command:
+ 
+ <b>./run.sh<b>
+
+ <b>The csv file should be in following formal<b>
+
+ ![image](https://github.com/user-attachments/assets/59e08b7c-bcfd-4538-b27b-d10c0033d54f)
+
