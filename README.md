@@ -21,7 +21,7 @@ sudo apt-get install libssl-dev
  
  <b>./run.sh<b>
 
- <b>The csv file should be in following formal<b>
+ The csv file should be in following formal
 
  ![image](https://github.com/user-attachments/assets/59e08b7c-bcfd-4538-b27b-d10c0033d54f)
 
