@@ -2,7 +2,10 @@
 #include <stdint.h>
 #include <time.h>
 #include<ctype.h>
-#define NAME_SIZE 50
+#include <stdlib.h>
+#include <string.h>
+
+#define FILE_NAME_SIZE 16
 #define MAX_LINE 128
 #define SHA256_DIGEST_LENGTH 32
 #define PUBLIC_ID_SIZE 32
@@ -11,62 +14,68 @@
 #define TABLE_SIZE 101
 #define WALLET_TABLE_SIZE 31
 #define DIFFICULTY 3
+#define NUM_USERS 20
 
-// networking
 #include "peer.h"
 
+
 // Structure of Blockchain
-typedef struct Info{
+typedef struct Info
+{
     char tnx[TNX_SIZE];
     char senderID[PUBLIC_ID_SIZE];
     char receiverID[PUBLIC_ID_SIZE];
     float amt;
+
 }Info;
 
-typedef struct blockData{
+typedef struct blockData
+{
     uint32_t index;
-    time_t timestamp;                               // about time_t, human readable format
-    Info *info;                                      // Holds transaction data
+    time_t timestamp;                               
+    Info *info;                                      
     uint32_t NumOfTxn;
     unsigned char prevHash[SHA256_DIGEST_LENGTH];
     unsigned char currHash[SHA256_DIGEST_LENGTH];
     unsigned char merkleRoot[SHA256_DIGEST_LENGTH];
-    uint32_t nonce;                                 // Nonce for proof-of-work
+    uint32_t nonce;
+
 } BlockData;
 
-typedef struct block{
+typedef struct block
+{
     BlockData data;
     struct block *next;
+
 }block;
 
-typedef struct{
+typedef struct
+{
     block *head;
     block *rear;
+
 }Blockchain;
 
+
 //Structure for HashTable
-typedef struct HashNode{
+typedef struct HashNode
+{
     Info *data;
     struct HashNode *next;
+
 }HashNode;
 
-typedef struct HashTable{
+typedef struct HashTable
+{
     HashNode *buckets[TABLE_SIZE];
 }HashTable;
 
-// UPDATED TRANSACTION STRUCTURE
-typedef struct txInfo
-{
-    char id[PUBLIC_ID_SIZE];
-    char sender[NAME_SIZE];
-    char receiver[NAME_SIZE];
-    uint32_t txBalance;
-} txInfo;
 
 typedef struct WalletStorage
 {
     char id[PUBLIC_ID_SIZE];
     float balance;
+
 }WalletStorage;
 
 // FUNCTION PROTOTYPES
@@ -75,11 +84,10 @@ void init_blockchain(Blockchain *chain);
 void init_BlockData(BlockData *blockdata);
 BlockData *ReadFile(char *filename);
 void AddBlock(Blockchain *chain, BlockData *blockData);
+void isBlockChainValid(Blockchain B);
 void printBlockchain(Blockchain chain);
-void addInfoToBlock(BlockData *blockData);
+void printBlock(Blockchain chain, int index);
 void freeBlockchain(Blockchain *chain);
-void printBlock(Blockchain chain, int index); // based off index
-void EditBlock(Blockchain chain, char *filename);
 
 // SHA256
 void computeSHA256(const char *data, unsigned char *hash);
@@ -97,11 +105,9 @@ void InitWalletStorage();
 int isTxnBlockValid(Info *info, int n);
 void update(char* senderID, char* receiverID, float amt);
 void updateBalance(Info* info, int n);
+
 // dummy variable
 void WalletPrint();
-
-// create account
-void CreateAccount();
 
 // your profile
 void ProfileMenu();
@@ -109,13 +115,10 @@ void CreateProfileDashboard();
 int isAuthenticated();
 void loopupTable(HashTable table);
 
-//Mining function prototypes
+//Mining function
 void Mineblock(BlockData *blockData);
 int isHashValid(unsigned char *hash);
 unsigned char *calculateHashForBlock(BlockData *blockData);
-
-//block chain validation
-void isBlockChainValid(Blockchain B);
 
 // Merge Sort
 void mergeSort(Info *info, int left, int right);
@@ -123,13 +126,18 @@ void merge(Info *info, int left, int mid, int right);
 
 //Search userID
 int findFirstIndex(Info transactions[], int size, const char *senderID);
+
+//Insert in HashTable
 void insertInSHashTable(int index, int numTxn, Info transactions[], HashTable *table);
 void insertInRHashTable(int numTxn, Info transactions[], HashTable *table);
 
-//Search Hash Table
+//Search HashTable
 void initSHashTable(HashTable *table);
 unsigned int generateSHash(const char *txnID);
 void insertTxnInfo(HashTable *table, Info *info, int index);
 Info *searchSHashTable(HashTable *table, const char *txnID);
 void freeSHashTable(HashTable *table);
 void printTransactionInfo(Info info);
+
+// Helper functions
+void printTimestamp(time_t timestamp);

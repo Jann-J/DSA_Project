@@ -1,19 +1,10 @@
-/* strtok() is destructive, meaning it changes the
- * input string by inserting null characters (\0).
- * If you need the original row after tokenization,
- * create a copy of it before calling strtok(). */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include "header.h"
 
-// constant global variables to store login credentials
+/* Constant global variables to store login credentials*/
 char NODE_PUBLIC_ID[PUBLIC_ID_SIZE] = "public-id-0001";
 char NODE_PRIVATE_ID[PUBLIC_ID_SIZE] = "private-id-A1B2C3D4";
 
-// Hardcoded array of Nodes in Blockchain
+/* Array of Nodes in Blockchain*/
 const char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
 		"public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008",
 		"public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016",
@@ -22,14 +13,16 @@ const char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
 		"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012"
 	};
 
-// Initial balance corresponding to the hardcoded public IDs
-float init_balance[20] =
-	{
+/* Initial balance corresponding to the hardcoded public IDs */
+float init_balance[20] = {
 		45678.34, 23567.89, 58912.45, 30012.78, 48005.65,
 		21987.44, 34899.12, 56000.50, 41023.89, 60000.00,
 		22000.12, 45987.56, 32000.34, 58000.78, 26000.45,
 		54000.23, 39000.56, 49999.99, 28000.67, 53000.45
 	};
+
+
+
 
 /* Initialises Blockchain */
 void init_blockchain(Blockchain *chain)
@@ -39,19 +32,6 @@ void init_blockchain(Blockchain *chain)
 	return;
 }
 
-void initSHashTable(HashTable *table)
-{
-	for (int i = 0; i < TABLE_SIZE; i++)
-	{
-		table->buckets[i] = NULL;
-	}
-}
-
-/* takes parameters string filename and
- * read first line of header
- * stored second line for index, time, nonce, sender, receiver, itemcount in struct
- * stored item information like itemname, amount, quantity in struct
- * returns the struct BlockData read from file */
 BlockData *ReadFile(char *filename)
 {
 	FILE *fp = fopen(filename, "r");
@@ -168,8 +148,7 @@ BlockData *ReadFile(char *filename)
 	return blockData;
 }
 
-/* Adds block in blockchain
- * later add check for no repeated block*/
+
 void AddBlock(Blockchain *chain, BlockData *blockData)
 {
 	block *newBlock = (block *)malloc(sizeof(block));
@@ -182,10 +161,8 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	newBlock->data = *blockData;
 	newBlock->next = NULL;
 
-	// Set the timestamp to the current time
-	newBlock->data.timestamp = time(NULL);
+	newBlock->data.timestamp = time(NULL);							//make it constant
 
-	// Add Block Nonce
 	newBlock->data.nonce = 1234;
 
 	updateMerkleRoot(blockData);
@@ -194,34 +171,31 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	// Genesis block
 	if (chain->head == NULL)
 	{
-		// Genesis Block's Previous Hash Will be 0000...
-		// memset(blockData->prevHash, 0, SHA256_DIGEST_LENGTH);
-
 		// Update newBlock's prevHash
 		memset(newBlock->data.prevHash, 0, SHA256_DIGEST_LENGTH);
 		newBlock->data.index = 1;
 
-		// Mine Block
-		printf("Start Mining...\n");
-
+		printf("Mining...\n\n");
 		Mineblock(blockData);
-
-		printf("Mining Completed.. \n Block is Valid.\n");
+		printf("Mining Completed.\n\nBlock is Valid.\n");
 
 		memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
 
 		// newBlock->data.nonce = blockData->nonce;
-
 		chain->head = newBlock;
 		chain->rear = newBlock;
 		printf("Block added successfully.\n");
 		return;
 	}
+	
 	memcpy(newBlock->data.prevHash, chain->rear->data.currHash, SHA256_DIGEST_LENGTH);
+	
 	newBlock->data.index = chain->rear->data.index + 1;
-
-	// Generate Valid Hash of Block
+	
+	printf("Mining...\n\n");
 	Mineblock(blockData);
+	printf("Mining Completed.\n\nBlock is Valid.\n\n");
+	
 	memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
 
 	newBlock->data.nonce = blockData->nonce;
@@ -233,19 +207,12 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	return;
 }
 
-void printTimestamp(time_t timestamp)
-{
-	struct tm *tm_info = localtime(&timestamp);
-	char buffer[26];
-	strftime(buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
-	printf("%s", buffer);
-	return;
-}
 
-/* Prints block based off index*/
+/* Prints block based on index*/
 void printBlock(Blockchain chain, int index)
 {
 	block *current = chain.head;
+
 	while (current != NULL && index != current->data.index)
 		current = current->next;
 
@@ -254,18 +221,14 @@ void printBlock(Blockchain chain, int index)
 		printf("\nBlock with index %d not found.\n", index);
 		return;
 	}
-	// Retrieve the data for the block
 	BlockData data = current->data;
 
-	// Print Index
 	printf("Block Index: %u\n", data.index);
 
-	// Print time
 	printf("Timestamp: ");
 	printTimestamp(data.timestamp);
 	printf("\n");
 
-	// Print Transaction Details
 	printf("Number of Transactions: %u\n", data.NumOfTxn);
 	for (uint32_t i = 0; i < data.NumOfTxn; i++)
 	{
@@ -278,25 +241,19 @@ void printBlock(Blockchain chain, int index)
 	return;
 }
 
-/* Prints whole Blockchain*/
+
+/* Prints the whole Blockchain*/
 void printBlockchain(Blockchain chain)
 {
-	block *current = chain.head; // Start from the head of the blockchain
+	block *current = chain.head;
 
 	printf("=========== Blockchain ===========\n\n");
 	while (current != NULL)
 	{
 		BlockData data = current->data;
 
-		// Print Index
 		printf("Block Index: %u\n", data.index);
 
-		// Print time
-		printf("Timestamp: ");
-		printTimestamp(data.timestamp);
-		printf("\n");
-
-		// Print Transaction Details
 		printf("Number of Transactions: %u\n", data.NumOfTxn);
 		for (uint32_t i = 0; i < data.NumOfTxn; i++)
 		{
@@ -307,7 +264,6 @@ void printBlockchain(Blockchain chain)
 			printf("\t  Amount: %.2f\n", data.info[i].amt);
 		}
 
-		// Print hash details
 		printf("Previous Hash: ");
 		printHash(data.prevHash);
 		printf("\n");
@@ -320,7 +276,6 @@ void printBlockchain(Blockchain chain)
 		printHash(data.merkleRoot);
 		printf("\n");
 
-		// Print nonce
 		printf("Nonce: %u\n", data.nonce);
 		printf("----------------------------------\n\n");
 
@@ -329,98 +284,14 @@ void printBlockchain(Blockchain chain)
 	return;
 }
 
-// MerkleTree
-unsigned char **createLeaves(Info *info, size_t TxnCount)
+
+
+void initSHashTable(HashTable *table)
 {
-	size_t i;
-	unsigned char **hashes = (unsigned char **)malloc(TxnCount * sizeof(unsigned char *));
-	for (i = 0; i < TxnCount; i++)
+	for (int i = 0; i < TABLE_SIZE; i++)
 	{
-		hashes[i] = (unsigned char *)malloc(SHA256_DIGEST_LENGTH);
-
-		// Create a data string for hashing
-		char data[MAX_LINE];
-		snprintf(data, MAX_LINE, "%s %s %s %.2f",
-				 info[i].tnx, info[i].senderID, info[i].receiverID, info[i].amt);
-		computeSHA256(data, hashes[i]);
+		table->buckets[i] = NULL;
 	}
-	return hashes;
-}
-
-// Function to combine two SHA256 hashes into one
-unsigned char *combineHashes(unsigned char *hash1, unsigned char *hash2)
-{
-	unsigned char combined[2 * SHA256_DIGEST_LENGTH];
-	memcpy(combined, hash1, SHA256_DIGEST_LENGTH);
-	memcpy(combined + SHA256_DIGEST_LENGTH, hash2, SHA256_DIGEST_LENGTH);
-
-	unsigned char *newHash = (unsigned char *)malloc(SHA256_DIGEST_LENGTH * sizeof(unsigned char));
-	computeSHA256((const char *)combined, newHash);
-	return newHash;
-}
-
-// Function to build the parent hashes from the current level of hashes
-unsigned char **buildParentHashes(unsigned char **hashes, size_t numHashes, size_t *newHashCount)
-{
-	size_t i;
-	*newHashCount = (numHashes + 1) / 2;
-	unsigned char **newHashes = (unsigned char **)malloc(*newHashCount * sizeof(unsigned char *));
-
-	for (i = 0; i < *newHashCount; i++)
-	{
-		if (2 * i + 1 < numHashes)
-		{
-			newHashes[i] = combineHashes(hashes[2 * i], hashes[2 * i + 1]);
-		}
-		else
-		{
-			// If we have an odd number of hashes, just copy the last one
-			newHashes[i] = (unsigned char *)malloc(SHA256_DIGEST_LENGTH);
-			memcpy(newHashes[i], hashes[2 * i], SHA256_DIGEST_LENGTH);
-		}
-	}
-
-	// Free the old hashes
-	for (i = 0; i < numHashes; i++)
-	{
-		free(hashes[i]);
-	}
-	free(hashes);
-
-	return newHashes;
-}
-
-// Main function to construct the Merkle tree and return the root hash
-unsigned char *constructMerkleTree(Info *info, size_t TxnCount)
-{
-	if (TxnCount == 0)
-		return NULL;
-
-	unsigned char **hashes = createLeaves(info, TxnCount);
-	size_t numHashes = TxnCount;
-	size_t newHashCount;
-
-	while (numHashes > 1)
-	{
-		hashes = buildParentHashes(hashes, numHashes, &newHashCount);
-		numHashes = newHashCount;
-	}
-
-	// The last hash is the Merkle root
-	unsigned char *merkleRoot = (unsigned char *)malloc(SHA256_DIGEST_LENGTH);
-	memcpy(merkleRoot, hashes[0], SHA256_DIGEST_LENGTH);
-
-	free(hashes[0]);
-	free(hashes);
-
-	return merkleRoot;
-}
-
-void updateMerkleRoot(BlockData *blockData)
-{
-	unsigned char *newMerkleRoot = constructMerkleTree(blockData->info, blockData->NumOfTxn);
-	memcpy(blockData->merkleRoot, newMerkleRoot, SHA256_DIGEST_LENGTH);
-	free(newMerkleRoot);
 }
 
 // hash function
@@ -455,7 +326,7 @@ void InitWalletStorage()
 	}
 
 	// Initialize each node with its ID and corresponding balance
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < NUM_USERS; i++)
 	{
 		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);	// Compute hash for public ID
 		strcpy(WalletBank[hash].id, BLOCKCHAIN_NODES_PUBLIC_ID[i]); // Copy public ID to WalletBank
@@ -466,7 +337,7 @@ void InitWalletStorage()
 // Print the wallet details (Public ID and Balance) for all nodes
 void WalletPrint()
 {
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < NUM_USERS; i++)
 	{
 		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]); // Compute hash for public ID
 		printf("public: %s balance: %f\n", WalletBank[hash].id, WalletBank[hash].balance);
@@ -525,6 +396,8 @@ void updateBalance(Info *info, int n)
 	return;
 }
 
+/******* Search Transaction ****************/
+
 // Print all transaction IDs stored in the hash table
 void loopupTable(HashTable table)
 {
@@ -532,20 +405,18 @@ void loopupTable(HashTable table)
 	int i = 0, count = 0;
 	HashNode *p;
 
-	// Iterate through all buckets in the hash table
 	while (i < TABLE_SIZE)
 	{
 		p = table.buckets[i];
-		while (p) // Traverse the linked list in each bucket
+		while (p)
 		{
-			printf("%s\t\t", p->data->tnx); // Print transaction ID
+			printf("%s\t\t", p->data->tnx);
 			count++;
 			p = p->next;
 		}
 		i++;
 	}
 
-	// If no transactions are found, print a message
 	if (count == 0)
 		printf("No transactions done yet.\n");
 	return;
@@ -554,17 +425,17 @@ void loopupTable(HashTable table)
 // View details of a user's account
 void ViewAccountDetails()
 {
-	uint32_t hash = sbj4_hash(NODE_PUBLIC_ID); // Compute hash for user's public ID
+	uint32_t hash = sbj4_hash(NODE_PUBLIC_ID);
 	printf("Public ID: [%s]\n", NODE_PUBLIC_ID);
 	printf("Private ID: [%s]\n", NODE_PRIVATE_ID);
 
-	if (!WalletBank) // Check if wallet is initialized
+	if (!WalletBank)
 	{
 		printf("Wallet Balance: 0\n");
 	}
 	else
 	{
-		printf("Wallet Balance: %.2f\n", WalletBank[hash].balance); // Display wallet balance
+		printf("Wallet Balance: %.2f\n", WalletBank[hash].balance);
 	}
 }
 
@@ -574,11 +445,10 @@ int isAuthenticated()
 	char private_id[PUBLIC_ID_SIZE];
 	char public_id[PUBLIC_ID_SIZE];
 
-	// Prompt user to enter their Public ID
 	printf("Enter your Public ID: ");
 	scanf("%s", public_id);
 
-	if (strcmp(public_id, NODE_PUBLIC_ID) != 0) // Verify Public ID
+	if (strcmp(public_id, NODE_PUBLIC_ID) != 0)
 	{
 		printf("Incorrect credentials. Try again.\n");
 		return 0;
@@ -588,12 +458,12 @@ int isAuthenticated()
 	printf("Enter your Private ID: ");
 	scanf("%s", private_id);
 
-	if (strcmp(private_id, NODE_PRIVATE_ID) != 0) // Verify Private ID
+	if (strcmp(private_id, NODE_PRIVATE_ID) != 0)
 	{
 		printf("Incorrect credentials. Try again.\n");
 		return 0;
 	}
-	return 1; // Authentication successful
+	return 1;
 }
 
 // Create a user profile dashboard to view transactions or account details
@@ -606,12 +476,10 @@ void CreateProfileDashboard(HashTable table)
 	switch (choice)
 	{
 	case 1:
-		// View transaction table if authenticated
 		isAuthenticated() ? loopupTable(table) : printf("Incorrect id..\n");
 		break;
 
 	case 2:
-		// View account details if authenticated
 		isAuthenticated() ? ViewAccountDetails() : printf("Incorrect id..\n");
 		break;
 
@@ -706,10 +574,8 @@ void isBlockChainValid(Blockchain B)
 	}
 
 	unsigned char *hash;
-	// for genesis block check index == 1 or not
 	if (p->data.index == 1)
 	{
-		// check the prevHash is equal to zero or not
 		if (strspn((char *)p->data.prevHash, "0") != strlen((char *)p->data.prevHash))
 		{
 			printf("Corruption found in genesis block\n");
@@ -977,5 +843,14 @@ void freeBlockchain(Blockchain *chain)
 
 	chain->head = NULL;
 	chain->rear = NULL;
+	return;
+}
+
+void printTimestamp(time_t timestamp)
+{
+	struct tm *tm_info = localtime(&timestamp);
+	char buffer[26];
+	strftime(buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+	printf("%s", buffer);
 	return;
 }

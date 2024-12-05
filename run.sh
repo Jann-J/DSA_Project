@@ -6,7 +6,7 @@
 # /dev/null doesn't show installation process
 sudo apt-get install -y libssl-dev > /dev/null 2>&1
 
-cc -Wall main.c logic.c peer.c sha256.c -o run -lssl -lcrypto
+cc -Wall main.c logic.c peer.c sha256.c merkleTree.c -o run -lssl -lcrypto
 
 # execute compiled file program
 ./run

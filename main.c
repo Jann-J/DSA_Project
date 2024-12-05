@@ -1,6 +1,6 @@
-#include <stdio.h>
+
 #include "header.h"
-#define FILE_NAME_SIZE 16
+
 
 void displayMenu()
 {
