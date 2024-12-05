@@ -1,6 +1,0 @@
-Number_of_Transactions,4,,
-Transaction ID,Sender's ID,Receiver's ID,Amount ($)
-TXN-A9D3B8C6F1E4,public-id-0003,public-id-0009,3000.72
-TXN-6F8C4E9A7D2B,public-id-0001,public-id-0004,9000.14
-TXN-3E1F9B7A6C5D,public-id-0002,public-id-0006,6000.53
-TXN-B6A2E7F4C8D3,public-id-0003,public-id-0001,1000.89
