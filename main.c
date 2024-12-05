@@ -93,8 +93,6 @@ int main()
 			if(i == -1) ;
 			else 
 				insertInSHashTable(i, data->NumOfTxn, data->info, &Stable);
-
-			printf("Block is Added Successfully!!\n");
 			
 			// Clean Up
 			free(data);

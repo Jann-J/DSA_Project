@@ -183,7 +183,13 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 		memset(newBlock->data.prevHash, 0, SHA256_DIGEST_LENGTH);
 		newBlock->data.index = 1;
 
+		// Mine Block 
+		printf("Start Mining...\n");
+
 		Mineblock(blockData);
+
+		printf("Mining Completed.. \n Block is Valid.\n");
+
 		memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
 
 		// newBlock->data.nonce = blockData->nonce;
@@ -305,28 +311,6 @@ void printBlockchain(Blockchain chain)
 	return;
 }
 
-/* Frees Blockchain after program is completed*/
-void freeBlockchain(Blockchain *chain)
-{
-	block *current = chain->head;
-	while (current != NULL)
-	{
-		block *nextBlock = current->next;
-
-		// Free items in BlockData
-		if (current->data.info != NULL)
-			free(current->data.info);
-
-		// Free the block itself
-		free(current);
-		current = nextBlock;
-	}
-
-	chain->head = NULL;
-	chain->rear = NULL;
-	return;
-}
-
 // MerkleTree
 unsigned char **createLeaves(Info *info, size_t TxnCount)
 {
@@ -438,6 +422,10 @@ uint32_t sbj4_hash(const char *publicID)
 	// Return the hash value within table range
 }
 
+// Wallet storage for maintaining user balances
+WalletStorage *WalletBank = NULL;
+
+// Hardcoded array of Nodes in Blockchain
 const char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
 	"public-id-0005", "public-id-0006", "public-id-0007", "public-id-0008",
 	"public-id-0013", "public-id-0014", "public-id-0015", "public-id-0016",
@@ -445,145 +433,168 @@ const char BLOCKCHAIN_NODES_PUBLIC_ID[][16] = {
 	"public-id-0017", "public-id-0018", "public-id-0019", "public-id-0020",
 	"public-id-0009", "public-id-0010", "public-id-0011", "public-id-0012"};
 
-WalletStorage *WalletBank = NULL;
+// Initial balance corresponding to the hardcoded public IDs
+float init_balance[20] =
+	{
+		45678.34, 23567.89, 58912.45, 30012.78, 48005.65,
+		21987.44, 34899.12, 56000.50, 41023.89, 60000.00,
+		22000.12, 45987.56, 32000.34, 58000.78, 26000.45,
+		54000.23, 39000.56, 49999.99, 28000.67, 53000.45};
 
+// Initialize Wallet Storage with hardcoded public IDs and balances
 void InitWalletStorage()
 {
+	// Allocate memory for WalletBank based on maximum blockchain nodes
 	WalletBank = (WalletStorage *)malloc(sizeof(WalletStorage) * MAX_NODES_IN_BLOCKCHAIN);
 	if (!WalletBank)
 	{
 		perror("Failed to allocate memory for WalletBank");
-		exit(EXIT_FAILURE);
+		exit(EXIT_FAILURE); // Terminate program if memory allocation fails
 	}
 
-	// Current nodes are 20
+	// Initialize each node with its ID and corresponding balance
 	for (int i = 0; i < 20; i++)
 	{
-		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);
-		strcpy(WalletBank[hash].id, BLOCKCHAIN_NODES_PUBLIC_ID[i]);
-		WalletBank[hash].balance = (10000 + rand() % 50000);
+		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);	// Compute hash for public ID
+		strcpy(WalletBank[hash].id, BLOCKCHAIN_NODES_PUBLIC_ID[i]); // Copy public ID to WalletBank
+		WalletBank[hash].balance = init_balance[i];					// Set initial balance
 	}
 }
 
+// Print the wallet details (Public ID and Balance) for all nodes
 void WalletPrint()
 {
 	for (int i = 0; i < 20; i++)
 	{
-		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);
+		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]); // Compute hash for public ID
 		printf("public: %s balance: %f\n", WalletBank[hash].id, WalletBank[hash].balance);
 	}
 }
 
+// Validate transaction block based on sender balance
 int isTxnBlockValid(Info *info, int n)
 {
 	for (int i = 0; i < n; i++)
 	{
-		char *senderID = info[i].senderID;
-		float totalAmount = 0;
+		char *senderID = info[i].senderID; // Extract sender ID
+		float totalAmount = 0;			   // Initialize total transaction amount for the sender
 
+		// Calculate the total amount sent by the sender in all transactions
 		for (int j = i; j < n; j++)
 		{
 			if (strcmp(senderID, info[j].senderID) == 0)
 			{
-				totalAmount += info[j].amt;
+				totalAmount += info[j].amt; // Accumulate transaction amount
 			}
 		}
 
-		unsigned int hash = sbj4_hash(senderID);
-		if (WalletBank[hash].balance < totalAmount)
+		unsigned int hash = sbj4_hash(senderID);	// Compute hash for sender ID
+		if (WalletBank[hash].balance < totalAmount) // Check if sender's balance is sufficient
 		{
-			return 0;
+			return 0; // Return invalid if balance is insufficient
 		}
 
+		// Skip subsequent transactions from the same sender
 		while (i + 1 < n && strcmp(senderID, info[i + 1].senderID) == 0)
 		{
 			i++;
 		}
 	}
-	return 1;
+	return 1; // All transactions are valid
 }
 
+// Update balances for sender and receiver after a transaction
 void update(char *senderID, char *receiverID, float amt)
 {
-	unsigned int senderHash = sbj4_hash(senderID);
-	unsigned int receiverHash = sbj4_hash(receiverID);
-	WalletBank[senderHash].balance -= amt;	 // Deduct from sender
-	WalletBank[receiverHash].balance += amt; // add to receiver
+	unsigned int senderHash = sbj4_hash(senderID);	   // Compute hash for sender
+	unsigned int receiverHash = sbj4_hash(receiverID); // Compute hash for receiver
+	WalletBank[senderHash].balance -= amt;			   // Deduct amount from sender's balance
+	WalletBank[receiverHash].balance += amt;		   // Add amount to receiver's balance
 	return;
 }
 
+// Update wallet balances for all transactions in a block
 void updateBalance(Info *info, int n)
 {
 	for (int i = 0; i < n; i++)
 	{
-		update(info[i].senderID, info[i].receiverID, info[i].amt);
+		update(info[i].senderID, info[i].receiverID, info[i].amt); // Update balances for each transaction
 	}
 	return;
 }
 
+// Print all transaction IDs stored in the hash table
 void loopupTable(HashTable table)
 {
 	printf("Transaction IDs are:\n");
 	int i = 0, count = 0;
 	HashNode *p;
+
+	// Iterate through all buckets in the hash table
 	while (i < TABLE_SIZE)
 	{
 		p = table.buckets[i];
-		while (p)
+		while (p) // Traverse the linked list in each bucket
 		{
-			printf("%s\t\t", p->data->tnx);
+			printf("%s\t\t", p->data->tnx); // Print transaction ID
 			count++;
 			p = p->next;
 		}
 		i++;
 	}
+
+	// If no transactions are found, print a message
 	if (count == 0)
 		printf("No transactions done yet.\n");
 	return;
 }
 
+// View details of a user's account
 void ViewAccountDetails()
 {
-	uint32_t hash = sbj4_hash(NODE_PUBLIC_ID);
+	uint32_t hash = sbj4_hash(NODE_PUBLIC_ID); // Compute hash for user's public ID
 	printf("Public ID: [%s]\n", NODE_PUBLIC_ID);
 	printf("Private ID: [%s]\n", NODE_PRIVATE_ID);
 
-	if (!WalletBank)
+	if (!WalletBank) // Check if wallet is initialized
 	{
 		printf("Wallet Balance: 0\n");
 	}
 	else
 	{
-		printf("Wallet Balance: %f\n", WalletBank[hash].balance);
+		printf("Wallet Balance: %.2f\n", WalletBank[hash].balance); // Display wallet balance
 	}
 }
 
+// Authenticate user by verifying public and private IDs
 int isAuthenticated()
 {
 	char private_id[PUBLIC_ID_SIZE];
 	char public_id[PUBLIC_ID_SIZE];
 
+	// Prompt user to enter their Public ID
 	printf("Enter your Public ID: ");
 	scanf("%s", public_id);
 
-	if (strcmp(public_id, NODE_PUBLIC_ID) != 0)
+	if (strcmp(public_id, NODE_PUBLIC_ID) != 0) // Verify Public ID
 	{
 		printf("Incorrect credentials. Try again.\n");
 		return 0;
 	}
 
+	// Prompt user to enter their Private ID
 	printf("Enter your Private ID: ");
 	scanf("%s", private_id);
 
-	if (strcmp(private_id, NODE_PRIVATE_ID) != 0)
+	if (strcmp(private_id, NODE_PRIVATE_ID) != 0) // Verify Private ID
 	{
 		printf("Incorrect credentials. Try again.\n");
 		return 0;
 	}
-	return 1;
+	return 1; // Authentication successful
 }
 
-// your profile dashboard to view transactions data
+// Create a user profile dashboard to view transactions or account details
 void CreateProfileDashboard(HashTable table)
 {
 	int choice;
@@ -593,11 +604,14 @@ void CreateProfileDashboard(HashTable table)
 	switch (choice)
 	{
 	case 1:
+		// View transaction table if authenticated
 		isAuthenticated() ? loopupTable(table) : printf("Incorrect id..\n");
 		break;
 
 	case 2:
+		// View account details if authenticated
 		isAuthenticated() ? ViewAccountDetails() : printf("Incorrect id..\n");
+		break;
 
 	default:
 		break;
@@ -621,18 +635,11 @@ void Mineblock(BlockData *blockData)
 
 	for (int i = 0;; i++)
 	{
-		// char hex[64];
-		// sprintf(hex, "%x", i);
-		// printf("%s ", hex);
-		// strcpy(blockData->nonce, hex);
 		blockData->nonce = i;
 		hash = calculateHashForBlock(blockData);
 
 		if (isHashValid(hash))
 		{
-			printf("Hash is Valid\n");
-			printHash(hash);
-			printf("%d ", i);
 			memcpy(blockData->currHash, hash, SHA256_DIGEST_LENGTH);
 			break;
 		}
@@ -928,7 +935,29 @@ void printTransactionInfo(Info info)
 	printf("Here are detials:\n");
 	printf("TransactionID: %s\n", info.tnx);
 	printf("SenderID: %s\n", info.senderID);
-	printf("TransactionID: %s\n", info.receiverID);
-	printf("TransactionID: %.2f\n", info.amt);
+	printf("ReceiverID: %s\n", info.receiverID);
+	printf("Amount: %.2f\n", info.amt);
+	return;
+}
+
+/* Frees Blockchain after program is completed*/
+void freeBlockchain(Blockchain *chain)
+{
+	block *current = chain->head;
+	while (current != NULL)
+	{
+		block *nextBlock = current->next;
+
+		// Free items in BlockData
+		if (current->data.info != NULL)
+			free(current->data.info);
+
+		// Free the block itself
+		free(current);
+		current = nextBlock;
+	}
+
+	chain->head = NULL;
+	chain->rear = NULL;
 	return;
 }
