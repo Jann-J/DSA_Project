@@ -376,17 +376,26 @@ void initSHashTable(HashTable *table)
 
 uint32_t sbj4_hash(const char *publicID)
 {
-	
-	int len = strlen(publicID);
-	int v1 = publicID[len - 1] - '0', v2 = publicID[len - 2] - '0';
-	return v2 * 10 + v1;
+	uint32_t hash = 0;
+    int prime = 31; // Prime multiplier for better distribution
+    int len = strlen(publicID);
+
+    // Mix characters of the string into the hash
+    for (int i = 0; i < len; i++)
+    {
+        hash = (hash * prime + publicID[i]) % WALLET_TABLE_SIZE;
+    }
+
+    // Return the hash value within table range
+    return hash;
 }
 
 WalletStorage *WalletBank = NULL;
 
 void InitWalletStorage()
 {
-	WalletBank = (WalletStorage *)malloc(sizeof(WalletStorage) * MAX_NODES_IN_BLOCKCHAIN);
+	// Allocate memory for WalletBank based on maximum blockchain nodes
+	WalletBank = (WalletStorage *)malloc(sizeof(WalletStorage) * WALLET_TABLE_SIZE);
 	if (!WalletBank)
 	{
 		perror("Failed to allocate memory for WalletBank");
@@ -600,10 +609,19 @@ void isBlockChainValid(Blockchain B)
 			printf("Corruption found in block %d\n", p->data.index);
 		}
 
-		if (strcmp((char *)q->data.currHash, (char *)p->data.prevHash) != 0)			//memcpy
+		// Check if the hash of the previous block matches the previous hash of the current block
+		if (strcmp((char *)q->data.currHash, (char *)p->data.prevHash) != 0)
 		{
 			printf("Corruption found in block %d\n", p->data.index);
 		}
+
+		// checking the current hash is valid or not
+		hash = calculateHashForBlock(&(p->data));
+		if (strcmp((char *)hash, (char *)p->data.currHash) != 0)
+		{
+			printf("Corruption found in block %d\n", p->data.index);
+		}
+		free(hash);
 		q = p;
 		p = p->next;
 	}
