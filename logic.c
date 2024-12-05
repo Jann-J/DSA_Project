@@ -742,7 +742,7 @@ unsigned int generateSHash(const char *txnID)
 {
 	unsigned long hash = 0xcbf29ce484222325;	   
 	unsigned long primeMultiplier = 0x100000001b3; 
-
+	int i;
 	for (i = 4; txnID[i] != '\0' && i < TNX_SIZE; i++)
 	{
 		unsigned char c;
