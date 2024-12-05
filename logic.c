@@ -21,9 +21,6 @@ float init_balance[20] = {
 		54000.23, 39000.56, 49999.99, 28000.67, 53000.45
 	};
 
-
-
-
 /* Initialises Blockchain */
 void init_blockchain(Blockchain *chain)
 {
@@ -148,7 +145,6 @@ BlockData *ReadFile(char *filename)
 	return blockData;
 }
 
-
 void AddBlock(Blockchain *chain, BlockData *blockData)
 {
 	block *newBlock = (block *)malloc(sizeof(block));
@@ -167,6 +163,12 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 
 	updateMerkleRoot(blockData);
 	memcpy(newBlock->data.merkleRoot, blockData->merkleRoot, SHA256_DIGEST_LENGTH);
+
+	if(!validateDup(*chain, newBlock->data.merkleRoot)){
+		printf("Block already exists. Cannot be added again.\n");
+		free(newBlock);
+		return;
+	}
 
 	// Genesis block
 	if (chain->head == NULL)
@@ -207,6 +209,16 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	return;
 }
 
+int validateDup(Blockchain chain, unsigned char *merkleRoot){
+	block *p = chain.head;
+	while(p){
+		if (memcmp(p->data.merkleRoot, merkleRoot, SHA256_DIGEST_LENGTH) == 0){
+			return 0;
+		}
+		p = p->next;
+	}
+	return 1;
+}
 
 /* Prints block based on index*/
 void printBlock(Blockchain chain, int index)
@@ -576,21 +588,19 @@ void isBlockChainValid(Blockchain B)
 	unsigned char *hash;
 	if (p->data.index == 1)
 	{
-		if (strspn((char *)p->data.prevHash, "0") != strlen((char *)p->data.prevHash))
-		{
-			printf("Corruption found in genesis block\n");
+		size_t zero_count = 0;
+		for (size_t i = 0; i < SHA256_DIGEST_LENGTH; ++i) { // HASH_LENGTH is the length of prevHash
+    		if (p->data.prevHash[i] != 0) 
+				break;
+   	   		zero_count++;
+		}
+		if (zero_count != SHA256_DIGEST_LENGTH) {
+    	printf("Corruption found in genesis block\n");
 		}
 	}
 	else
 	{
-		printf("Corruption found in genesis block\n");
-	}
-	// checking the currHash of genesis block
-	hash = calculateHashForBlock(&(p->data));
-	if (strcmp((char *)hash, (char *)p->data.currHash) != 0)
-	{
-		free(hash);
-		printf("Corruption found in block %d\n", p->data.index);
+		printf("Corruption found blockchain\n");
 	}
 
 	q = p; // q as previous block and p as current block

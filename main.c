@@ -86,7 +86,7 @@ int main()
 			*/
 			printf("\nValid Transactions...\n");
 
-			updateBalance(data->info, data->NumOfTxn);
+			//updateBalance(data->info, data->NumOfTxn);
 			AddBlock(&chain, data);
 
 			i = findFirstIndex(data->info, data->NumOfTxn, "public-id-0001");
@@ -127,18 +127,18 @@ int main()
 			printf("Option 9: Network Options selected.\n");
 			printf("   Enter sub-choice (a/b): ");
 			scanf(" %c", &subChoice); // Note the space before %c to handle newline characters
+			char blockname[FILE_NAME_SIZE];
+			printf("Enter block name: ");
+			scanf("%s", blockname);
 			switch (subChoice)
 			{
 			case 'a':
 				printf("   Sub-option a: Share Block via P2P Network selected.\n");
-				char blockname[FILE_NAME_SIZE];
-				printf("Enter block name: ");
-				scanf("%s", blockname);
 				P2P_NetworkConnection(blockname);
 				break;
 			case 'b':
 				printf("   Sub-option b: Receive Block from P2P Network selected.\n");
-				P2P_NetworkConnection("block.csv");
+				P2P_NetworkConnection(blockname);
 				break;
 			default:
 				printf("   Invalid sub-choice. Please try again.\n");

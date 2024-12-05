@@ -13,7 +13,7 @@
 #define TNX_SIZE 17
 #define TABLE_SIZE 101
 #define WALLET_TABLE_SIZE 31
-#define DIFFICULTY 3
+#define DIFFICULTY 2
 #define NUM_USERS 20
 
 #include "peer.h"
@@ -85,6 +85,7 @@ void init_BlockData(BlockData *blockdata);
 BlockData *ReadFile(char *filename);
 void AddBlock(Blockchain *chain, BlockData *blockData);
 void isBlockChainValid(Blockchain B);
+int validateDup(Blockchain chain, unsigned char *merkleRoot);
 void printBlockchain(Blockchain chain);
 void printBlock(Blockchain chain, int index);
 void freeBlockchain(Blockchain *chain);
