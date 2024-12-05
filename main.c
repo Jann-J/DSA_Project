@@ -80,13 +80,10 @@ int main()
 				free(data);
 				break;
 			};
-			/*
-				WalletPrint(); 
-				use it to print WalletInfo 
-			*/
+			
 			printf("\nValid Transactions...\n");
 
-			//updateBalance(data->info, data->NumOfTxn);
+			updateBalance(data->info, data->NumOfTxn);
 			AddBlock(&chain, data);
 
 			i = findFirstIndex(data->info, data->NumOfTxn, "public-id-0001");
@@ -126,7 +123,7 @@ int main()
 		case 6:
 			printf("Option 9: Network Options selected.\n");
 			printf("   Enter sub-choice (a/b): ");
-			scanf(" %c", &subChoice); // Note the space before %c to handle newline characters
+			scanf(" %c", &subChoice); 
 			char blockname[FILE_NAME_SIZE];
 			printf("Enter block name: ");
 			scanf("%s", blockname);

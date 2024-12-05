@@ -209,6 +209,56 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	return;
 }
 
+
+/* Logic :
+	1. Mining function will generate the valid hash for the 
+		given block and change the currhash field of blockData
+	2. Initializing iteration number as nonce of the blockdata
+	3. Then calculating the hash by using calculateHash function.
+	4. If Hash is valid then mining is completed => copy the hash 
+		into blockData->hash and return.
+	5 else increment iteration number and step 2.
+*/
+void Mineblock(BlockData *blockData)
+{
+	unsigned char *hash;
+
+	for (int i = 0;; i++)
+	{
+		blockData->nonce = i;
+		hash = calculateHashForBlock(blockData);
+
+		if (isHashValid(hash))
+		{
+			memcpy(blockData->currHash, hash, SHA256_DIGEST_LENGTH);
+			break;
+		}
+		else
+		{
+			continue;
+		}
+	}
+	free(hash);
+	return;
+}
+
+
+// Checking the hash is valid or not according to difficulty/
+int isHashValid(unsigned char *hash)
+{
+	
+	for(int i = 0; i < DIFFICULTY; i++) {
+		if(hash[i] == 0) {
+			continue;
+		}
+		else {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
 int validateDup(Blockchain chain, unsigned char *merkleRoot){
 	block *p = chain.head;
 	while(p){
@@ -219,6 +269,22 @@ int validateDup(Blockchain chain, unsigned char *merkleRoot){
 	}
 	return 1;
 }
+
+
+/*Calculating hash:
+	1. first concatinating index, timestamp, prevhash, merkleroot, nonce.
+	2. generate the hash using sha256 and return that string.
+	##note: memory is malloced in sha256, have to free that memory ==> freed in Mineblock where to free hash??*/
+
+unsigned char *calculateHashForBlock(BlockData *blockData)
+{
+	char record[256];
+	snprintf(record, sizeof(record), "%u%ld%s%s%u", blockData->index,blockData->timestamp, blockData->prevHash, blockData->merkleRoot, blockData->nonce);
+	unsigned char *outputhash = (unsigned char *)malloc(sizeof(unsigned char) * SHA256_DIGEST_LENGTH);
+	computeSHA256((const char *)record, outputhash);
+	return outputhash;
+}
+
 
 /* Prints block based on index*/
 void printBlock(Blockchain chain, int index)
@@ -306,95 +372,86 @@ void initSHashTable(HashTable *table)
 	}
 }
 
-// hash function
+/******************Wallet Functions********************/
+
 uint32_t sbj4_hash(const char *publicID)
 {
-	// uint32_t hash = 0;
-	// int i;
-
-	// // Simple hash calculation
-	// for (i = 9; publicID[i] != '\0'; i++)
-	// {
-	// 	hash = (hash * 37 + publicID[i]) % WALLET_TABLE_SIZE; // Prime multiplier 31
-	// }
+	
 	int len = strlen(publicID);
 	int v1 = publicID[len - 1] - '0', v2 = publicID[len - 2] - '0';
 	return v2 * 10 + v1;
-	// Return the hash value within table range
 }
 
-// Wallet storage for maintaining user balances
 WalletStorage *WalletBank = NULL;
 
-// Initialize Wallet Storage with hardcoded public IDs and balances
 void InitWalletStorage()
 {
-	// Allocate memory for WalletBank based on maximum blockchain nodes
 	WalletBank = (WalletStorage *)malloc(sizeof(WalletStorage) * MAX_NODES_IN_BLOCKCHAIN);
 	if (!WalletBank)
 	{
 		perror("Failed to allocate memory for WalletBank");
-		exit(EXIT_FAILURE); // Terminate program if memory allocation fails
+		exit(EXIT_FAILURE);
 	}
 
-	// Initialize each node with its ID and corresponding balance
+
 	for (int i = 0; i < NUM_USERS; i++)
 	{
-		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);	// Compute hash for public ID
-		strcpy(WalletBank[hash].id, BLOCKCHAIN_NODES_PUBLIC_ID[i]); // Copy public ID to WalletBank
-		WalletBank[hash].balance = init_balance[i];					// Set initial balance
+		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]);	
+		strcpy(WalletBank[hash].id, BLOCKCHAIN_NODES_PUBLIC_ID[i]); 
+		WalletBank[hash].balance = init_balance[i];					
 	}
 }
 
-// Print the wallet details (Public ID and Balance) for all nodes
-void WalletPrint()
+
+/*void WalletPrint()
 {
 	for (int i = 0; i < NUM_USERS; i++)
 	{
-		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]); // Compute hash for public ID
+		uint32_t hash = sbj4_hash(BLOCKCHAIN_NODES_PUBLIC_ID[i]); 
 		printf("public: %s balance: %f\n", WalletBank[hash].id, WalletBank[hash].balance);
 	}
-}
+}*/
+
 
 // Validate transaction block based on sender balance
 int isTxnBlockValid(Info *info, int n)
 {
 	for (int i = 0; i < n; i++)
 	{
-		char *senderID = info[i].senderID; // Extract sender ID
-		float totalAmount = 0;			   // Initialize total transaction amount for the sender
+		char *senderID = info[i].senderID; 
+		float totalAmount = 0;			   
 
-		// Calculate the total amount sent by the sender in all transactions
+		
 		for (int j = i; j < n; j++)
 		{
 			if (strcmp(senderID, info[j].senderID) == 0)
 			{
-				totalAmount += info[j].amt; // Accumulate transaction amount
+				totalAmount += info[j].amt; 
 			}
 		}
 
-		unsigned int hash = sbj4_hash(senderID);	// Compute hash for sender ID
-		if (WalletBank[hash].balance < totalAmount) // Check if sender's balance is sufficient
+		unsigned int hash = sbj4_hash(senderID);	
+		if (WalletBank[hash].balance < totalAmount) 
 		{
-			return 0; // Return invalid if balance is insufficient
+			return 0; 
 		}
 
-		// Skip subsequent transactions from the same sender
 		while (i + 1 < n && strcmp(senderID, info[i + 1].senderID) == 0)
 		{
 			i++;
 		}
 	}
-	return 1; // All transactions are valid
+	return 1;
 }
+
 
 // Update balances for sender and receiver after a transaction
 void update(char *senderID, char *receiverID, float amt)
 {
-	unsigned int senderHash = sbj4_hash(senderID);	   // Compute hash for sender
-	unsigned int receiverHash = sbj4_hash(receiverID); // Compute hash for receiver
-	WalletBank[senderHash].balance -= amt;			   // Deduct amount from sender's balance
-	WalletBank[receiverHash].balance += amt;		   // Add amount to receiver's balance
+	unsigned int senderHash = sbj4_hash(senderID);	   
+	unsigned int receiverHash = sbj4_hash(receiverID); 
+	WalletBank[senderHash].balance -= amt;			   
+	WalletBank[receiverHash].balance += amt;		   
 	return;
 }
 
@@ -408,7 +465,9 @@ void updateBalance(Info *info, int n)
 	return;
 }
 
-/******* Search Transaction ****************/
+
+
+/****************** Search by Transactions ********************/
 
 // Print all transaction IDs stored in the hash table
 void loopupTable(HashTable table)
@@ -466,7 +525,6 @@ int isAuthenticated()
 		return 0;
 	}
 
-	// Prompt user to enter their Private ID
 	printf("Enter your Private ID: ");
 	scanf("%s", private_id);
 
@@ -501,77 +559,6 @@ void CreateProfileDashboard(HashTable table)
 	return;
 }
 
-// Mining Function
-
-/* Logic :
-	1. Mining function will generate the valid hash for the given block and change the currhash field of blockData
-	2. Initializing iteration number as nonce of the blockdata
-	3. Then calculating the hash by using calculateHash function.
-	4. If Hash is valid then mining is completed => copy the hash into blockData->hash and return.
-	5 else increment iteration number and step 2.
-*/
-
-void Mineblock(BlockData *blockData)
-{
-	unsigned char *hash;
-
-	for (int i = 0;; i++)
-	{
-		blockData->nonce = i;
-		hash = calculateHashForBlock(blockData);
-
-		if (isHashValid(hash))
-		{
-			memcpy(blockData->currHash, hash, SHA256_DIGEST_LENGTH);
-			break;
-		}
-		else
-		{
-			continue;
-		}
-	}
-	free(hash);
-	return;
-}
-
-// Checking the hash is valid or not according to difficulty/
-int isHashValid(unsigned char *hash)
-{
-	/*char prefix[DIFFICULTY + 1];
-	for (int i = 0; i < DIFFICULTY; i++)
-	{
-		prefix[i] = 0;
-	}
-	prefix[DIFFICULTY] = '\0';*/
-
-	/*if (strncmp((char *)hash, prefix, DIFFICULTY) == 0)
-	{
-		return 1;
-	}*/
-	for(int i = 0; i < DIFFICULTY; i++) {
-		if(hash[i] == 0) {
-			continue;
-		}
-		else {
-			return 0;
-		}
-	}
-	return 1;
-}
-
-/*Calculating hash:
-	1. first concatinating index, timestamp, prevhash, merkleroot, nonce.
-	2. generate the hash using sha256 and return that string.
-	##note: memory is malloced in sha256, have to free that memory ==> freed in Mineblock where to free hash??*/
-
-unsigned char *calculateHashForBlock(BlockData *blockData)
-{
-	char record[256];
-	snprintf(record, sizeof(record), "%u%ld%s%s%u", blockData->index,blockData->timestamp, blockData->prevHash, blockData->merkleRoot, blockData->nonce);
-	unsigned char *outputhash = (unsigned char *)malloc(sizeof(unsigned char) * SHA256_DIGEST_LENGTH);
-	computeSHA256((const char *)record, outputhash);
-	return outputhash;
-}
 
 // to validate the blockchain
 void isBlockChainValid(Blockchain B)
@@ -589,7 +576,7 @@ void isBlockChainValid(Blockchain B)
 	if (p->data.index == 1)
 	{
 		size_t zero_count = 0;
-		for (size_t i = 0; i < SHA256_DIGEST_LENGTH; ++i) { // HASH_LENGTH is the length of prevHash
+		for (size_t i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
     		if (p->data.prevHash[i] != 0) 
 				break;
    	   		zero_count++;
@@ -603,29 +590,19 @@ void isBlockChainValid(Blockchain B)
 		printf("Corruption found blockchain\n");
 	}
 
-	q = p; // q as previous block and p as current block
+	q = p;
 	p = p->next;
 	while (p)
 	{
-		// Check if the index of the p is exactly 1 more than the q's index
 		if (q->data.index + 1 != p->data.index)
 		{
 			printf("Corruption found in block %d\n", p->data.index);
 		}
 
-		// Check if the hash of the previous block matches the previous hash of the current block
-		if (strcmp((char *)q->data.currHash, (char *)p->data.prevHash) != 0)
+		if (strcmp((char *)q->data.currHash, (char *)p->data.prevHash) != 0)			//memcpy
 		{
 			printf("Corruption found in block %d\n", p->data.index);
 		}
-
-		// checking the current hash is valid or not
-		hash = calculateHashForBlock(&(p->data));
-		if (strcmp((char *)hash, (char *)p->data.currHash) != 0)
-		{
-			printf("Corruption found in block %d\n", p->data.index);
-		}
-		free(hash);
 		q = p;
 		p = p->next;
 	}
@@ -634,28 +611,26 @@ void isBlockChainValid(Blockchain B)
 	return;
 }
 
-// Merge Sort
+/****************** MERGE SORT ********************/
 // Function to merge two halves of the Info array
 void merge(Info *info, int left, int mid, int right)
 {
 	int n1 = mid - left + 1;
 	int n2 = right - mid;
 
-	// Temporary arrays to hold data
+	
 	Info *leftArray = (Info *)malloc(n1 * sizeof(Info));
 	Info *rightArray = (Info *)malloc(n2 * sizeof(Info));
 
-	// Copy data to temporary arrays
 	for (int i = 0; i < n1; i++)
 		leftArray[i] = info[left + i];
 	for (int i = 0; i < n2; i++)
 		rightArray[i] = info[mid + 1 + i];
 
-	// Merge the temporary arrays back into info[left..right]
 	int i = 0, j = 0, k = left;
 	while (i < n1 && j < n2)
 	{
-		// Compare sender IDs
+
 		if (strcmp(leftArray[i].senderID, rightArray[j].senderID) <= 0)
 		{
 			info[k] = leftArray[i];
@@ -669,7 +644,6 @@ void merge(Info *info, int left, int mid, int right)
 		k++;
 	}
 
-	// Copy remaining elements of leftArray, if any
 	while (i < n1)
 	{
 		info[k] = leftArray[i];
@@ -677,7 +651,6 @@ void merge(Info *info, int left, int mid, int right)
 		k++;
 	}
 
-	// Copy remaining elements of rightArray, if any
 	while (j < n2)
 	{
 		info[k] = rightArray[j];
@@ -685,24 +658,21 @@ void merge(Info *info, int left, int mid, int right)
 		k++;
 	}
 
-	// Free temporary arrays
 	free(leftArray);
 	free(rightArray);
 }
+
 
 // Function to implement merge sort on Info array
 void mergeSort(Info *info, int left, int right)
 {
 	if (left < right)
 	{
-		// Calculate the midpoint
 		int mid = left + (right - left) / 2;
 
-		// Recursively sort the first and second halves
 		mergeSort(info, left, mid);
 		mergeSort(info, mid + 1, right);
 
-		// Merge the sorted halves
 		merge(info, left, mid, right);
 	}
 }
@@ -711,22 +681,22 @@ void mergeSort(Info *info, int left, int right)
 int findFirstIndex(Info transactions[], int size, const char *senderID)
 {
 	int left = 0, right = size - 1;
-	int result = -1; // To store the first occurrence
+	int result = -1;
 	while (left <= right)
 	{
 		int mid = left + (right - left) / 2;
 		if (strcmp(transactions[mid].senderID, senderID) == 0)
 		{
-			result = mid;	 // Update result
-			right = mid - 1; // Continue searching in the left half
+			result = mid;	
+			right = mid - 1;
 		}
 		else if (strcmp(transactions[mid].senderID, senderID) < 0)
 		{
-			left = mid + 1; // Search in the right half
+			left = mid + 1;
 		}
 		else
 		{
-			right = mid - 1; // Search in the left half
+			right = mid - 1;
 		}
 	}
 	return result;
@@ -770,9 +740,8 @@ void insertTxnInfo(HashTable *table, Info *info, int i)
 
 unsigned int generateSHash(const char *txnID)
 {
-	unsigned long hash = 0xcbf29ce484222325;	   // Large prime initial value (FNV offset basis)
-	unsigned long primeMultiplier = 0x100000001b3; // Prime multiplier (FNV prime)
-	int i;
+	unsigned long hash = 0xcbf29ce484222325;	   
+	unsigned long primeMultiplier = 0x100000001b3; 
 
 	for (i = 4; txnID[i] != '\0' && i < TNX_SIZE; i++)
 	{
@@ -787,21 +756,19 @@ unsigned int generateSHash(const char *txnID)
 		}
 		else
 		{
-			continue; // Skip any non-alphanumeric characters
+			continue;
 		}
 
-		// Update the hash with a mix of current character and previous hash
 		hash = hash ^ c;
-		hash = (hash * primeMultiplier) % TABLE_SIZE; // Apply modulus to fit table size
+		hash = (hash * primeMultiplier) % TABLE_SIZE; 
 	}
 
-	// Final mixing step for better bit diffusion
+	
 	hash ^= (hash >> 33);
 	hash *= primeMultiplier;
 	hash ^= (hash >> 33);
 
-	hash = hash % TABLE_SIZE; // Ensure hash is within table range
-
+	hash = hash % TABLE_SIZE; 
 	return (unsigned int)hash;
 }
 
@@ -842,11 +809,11 @@ void freeBlockchain(Blockchain *chain)
 	{
 		block *nextBlock = current->next;
 
-		// Free items in BlockData
+		
 		if (current->data.info != NULL)
 			free(current->data.info);
 
-		// Free the block itself
+		
 		free(current);
 		current = nextBlock;
 	}
