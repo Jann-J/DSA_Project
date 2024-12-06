@@ -572,7 +572,6 @@ void isBlockChainValid(Blockchain B)
 		return;
 	}
 
-	unsigned char *hash;
 	if (p->data.index == 1)
 	{
 		size_t zero_count = 0;
@@ -779,11 +778,8 @@ Info *searchSHashTable(HashTable *table, const char *txnID)
 
 	while (current)
 	{
-		printf("%s\n", current->data->tnx);
-		printf("%s\n", txnID);
 		if (strcmp(current->data->tnx, txnID) == 0)
 		{
-			printf("yes\n");
 			return current->data;
 		}
 		current = current->next;
@@ -793,7 +789,7 @@ Info *searchSHashTable(HashTable *table, const char *txnID)
 
 void printTransactionInfo(Info info)
 {
-	printf("Here are detials:\n");
+	printf("\nHere are the Transaction detials:\n");
 	printf("TransactionID: %s\n", info.tnx);
 	printf("SenderID: %s\n", info.senderID);
 	printf("ReceiverID: %s\n", info.receiverID);

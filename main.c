@@ -90,15 +90,16 @@ int main()
 			if(i == -1) ;
 			else 
 				insertInSHashTable(i, data->NumOfTxn, data->info, &Stable);
-
 			insertInRHashTable(data->NumOfTxn, data->info, &Stable);
-			// Clean Up
+
 			free(data);
 			break;
 			
 		case 3:
 			printf("Option 4: Validate Blockchain Integrity selected.\n");
 			isBlockChainValid(chain);
+			printf("Hash of last node: ");
+			printHash(chain.rear->data.currHash);
 			break;
 		case 4:
 			//printf("Enter private ID: ");
