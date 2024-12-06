@@ -1,16 +1,17 @@
 #include "header.h"
+#define BLOCK_NAME_SIZE 20
 
 // Struct to store arguments for the receive thread
-ThreadArguments *StoreReceiveThreadArgs(int server_fd, char *blockname)
+ThreadArguments *StoreReceiveThreadArgs(int server_fd, int blockIndx)
 {
     ThreadArguments *arg = (ThreadArguments *)malloc(sizeof(ThreadArguments));
     arg->server_fd = server_fd;
-    arg->blockname = blockname;
+    arg->blockIndx = blockIndx;
     return arg;
 }
 
 // Main function to establish a P2P network connection
-int P2P_NetworkConnection(char *blockname)
+int P2P_NetworkConnection(int blockIndx)
 {
     int PORT = 8080; // Port for incoming connections
     int server_fd;
@@ -20,6 +21,14 @@ int P2P_NetworkConnection(char *blockname)
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
         perror("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Enable reuse of the address
+    int opt = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+    {
+        perror("setsockopt failed");
         exit(EXIT_FAILURE);
     }
 
@@ -44,7 +53,7 @@ int P2P_NetworkConnection(char *blockname)
 
     // Start a thread to handle incoming connections
     pthread_t tid;
-    ThreadArguments *thread_arg = StoreReceiveThreadArgs(server_fd, blockname);
+    ThreadArguments *thread_arg = StoreReceiveThreadArgs(server_fd, blockIndx);
     pthread_create(&tid, NULL, receive_thread, thread_arg);
 
     // Display user menu for sending files or quitting
@@ -62,7 +71,7 @@ int P2P_NetworkConnection(char *blockname)
         {
         case 1:
             // Handle file sending
-            sending(blockname);
+            sending(blockIndx);
             break;
         case 0:
             // Exit the program
@@ -152,17 +161,24 @@ void *receive_thread(void *args)
 {
     ThreadArguments *arg = (ThreadArguments *)args;
     int server_fd = arg->server_fd;
-    char *blockname = arg->blockname;
+    int blockIndx = arg->blockIndx;
 
     // Start receiving files
-    receiving(server_fd, blockname);
+    receiving(server_fd, blockIndx);
     pthread_exit(NULL);
 }
 
 // Function to write received data to a file
-void write_file(int client_socket_fd, char *blockname)
+void write_file(int client_socket_fd, int blockIndx)
 {
-    FILE *fp = fopen(blockname, "w");
+    char ServerBlock[BLOCK_NAME_SIZE];
+
+    // Updtae Block Name in server side
+    snprintf(ServerBlock, BLOCK_NAME_SIZE, "Block%d.csv", blockIndx);
+
+    printf("%s ", ServerBlock);
+
+    FILE *fp = fopen(ServerBlock, "w");
     if (fp == NULL)
     {
         perror("Error in creating file");
@@ -183,13 +199,13 @@ void write_file(int client_socket_fd, char *blockname)
     {
         perror("Error receiving data");
     }
-
-    printf("\n%s received successfully\n", blockname);
+    printf("\n%s received successfully\n", ServerBlock);
+    close(client_socket_fd);
     fclose(fp);
 }
 
 // Function to handle incoming connections and receive files
-void receiving(int server_fd, char *blockname)
+void receiving(int server_fd, int blockIndx)
 {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
@@ -227,7 +243,7 @@ void receiving(int server_fd, char *blockname)
                 else
                 {
                     // Handle data from a connected client
-                    write_file(i, blockname);
+                    write_file(i, blockIndx);
                     close(i);                    // Close client socket after handling
                     FD_CLR(i, &current_sockets); // Remove socket from set
                 }

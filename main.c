@@ -1,6 +1,4 @@
-
 #include "header.h"
-
 
 void displayMenu()
 {
@@ -38,6 +36,8 @@ int main()
 		if(isAuthenticated())
 			break;
 	}*/	
+
+	static int blockIndx = 1;
 
 	int choice, index, i;
 	char subChoice;
@@ -123,23 +123,24 @@ int main()
 			printf("Option 9: Network Options selected.\n");
 			printf("   Enter sub-choice (a/b): ");
 			scanf(" %c", &subChoice); 
-			char blockname[FILE_NAME_SIZE];
-			printf("Enter block name: ");
-			scanf("%s", blockname);
+			// char blockname[FILE_NAME_SIZE];
+			// printf("Enter block name: ");
+			// scanf("%s", blockname);
 			switch (subChoice)
 			{
 			case 'a':
 				printf("   Sub-option a: Share Block via P2P Network selected.\n");
-				P2P_NetworkConnection(blockname);
+				P2P_NetworkConnection(blockIndx);
 				break;
 			case 'b':
 				printf("   Sub-option b: Receive Block from P2P Network selected.\n");
-				P2P_NetworkConnection(blockname);
+				P2P_NetworkConnection(blockIndx);
 				break;
 			default:
 				printf("   Invalid sub-choice. Please try again.\n");
 				break;
 			}
+			blockIndx++;
 			break;
 		case 7:
 			exit(0);
