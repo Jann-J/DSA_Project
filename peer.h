@@ -20,6 +20,6 @@ typedef struct ThreadArguments
 
 // Networking
 int P2P_NetworkConnection(int blockIndx);
-void sending();
+void sending( int blockIndx);
 void receiving(int server_fd, int blockIndx);
 void *receive_thread(void *server_fd);

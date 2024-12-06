@@ -13,7 +13,7 @@ ThreadArguments *StoreReceiveThreadArgs(int server_fd, int blockIndx)
 // Main function to establish a P2P network connection
 int P2P_NetworkConnection(int blockIndx)
 {
-    int PORT = 8080; // Port for incoming connections
+    int PORT = 8082; // Port for incoming connections
     int server_fd;
     struct sockaddr_in address;
 
@@ -89,7 +89,7 @@ int P2P_NetworkConnection(int blockIndx)
 }
 
 // Function to send a file over a socket
-void send_file(int socketFD, char blockname[])
+void send_file(int socketFD, char *blockname)
 {
     FILE *fp = fopen(blockname, "r");
     if (fp == NULL)
@@ -114,11 +114,15 @@ void send_file(int socketFD, char blockname[])
 }
 
 // Function to send files to multiple peers
-void sending(char *blockname)
+void sending(int blockIndx)
 {
-    int PORT_LIST[] = {8081, 8082}; // List of ports to send the file
+    int PORT_LIST[] = {8080, 8081}; // List of ports to send the file
     int ports_len = sizeof(PORT_LIST) / sizeof(PORT_LIST[0]);
     char ip_address[INET_ADDRSTRLEN] = "127.0.0.1"; // Localhost IP
+
+    char blockname[FILE_NAME_SIZE];
+    printf("Enter block name: ");
+    scanf("%s", blockname);
 
     for (int i = 0; i < ports_len; i++)
     {
