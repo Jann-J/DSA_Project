@@ -75,8 +75,6 @@ int main()
 					
 			if(!isTxnBlockValid(data->info, data->NumOfTxn))
 			{
-				printf("\nInvalid Transactions Found!!\n");
-				printf("Block is NOT added\n");
 				free(data);
 				break;
 			};

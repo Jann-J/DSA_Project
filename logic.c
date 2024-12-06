@@ -433,6 +433,8 @@ int isTxnBlockValid(Info *info, int n)
 		unsigned int hash = sbj4_hash(senderID);	
 		if (WalletBank[hash].balance < totalAmount) 
 		{
+			printf("\nInvalid Transactions found for sender: %s\n", info[i].senderID);
+			printf("Block is NOT added\n");
 			return 0; 
 		}
 
