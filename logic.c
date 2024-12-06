@@ -723,6 +723,10 @@ void insertInRHashTable(int numTxn, Info transactions[], HashTable *table){
 	return;
 }
 
+/* Inserts Transaction information with array index i
+ * parameters passed are hash table pointer, pointer to info
+ * index of the array info to be inserted.
+ */
 void insertTxnInfo(HashTable *table, Info *info, int i)
 {
 	unsigned int index = generateSHash(info[i].tnx);
@@ -739,6 +743,7 @@ void insertTxnInfo(HashTable *table, Info *info, int i)
 	return;
 }
 
+/*Hash function for search transactions*/
 unsigned int generateSHash(const char *txnID)
 {
 	unsigned long hash = 0xcbf29ce484222325;	   
@@ -773,6 +778,7 @@ unsigned int generateSHash(const char *txnID)
 	return (unsigned int)hash;
 }
 
+/*Search Transaction with respect to sender ID*/
 Info *searchSHashTable(HashTable *table, const char *txnID)
 {
 	unsigned int index = generateSHash(txnID);
@@ -789,6 +795,10 @@ Info *searchSHashTable(HashTable *table, const char *txnID)
 	return NULL;
 }
 
+/* Print Transaction information
+ * Info struct is provided
+ * no return value 
+ */
 void printTransactionInfo(Info info)
 {
 	printf("\nHere are the Transaction detials:\n");
