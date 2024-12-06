@@ -610,22 +610,13 @@ void isBlockChainValid(Blockchain B)
 		}
 
 		// Check if the hash of the previous block matches the previous hash of the current block
-		if (strcmp((char *)q->data.currHash, (char *)p->data.prevHash) != 0)
+		if (memcmp(q->data.currHash, p->data.prevHash, SHA256_DIGEST_LENGTH) != 0)
 		{
 			printf("Corruption found in block %d\n", p->data.index);
 		}
-
-		// checking the current hash is valid or not
-		hash = calculateHashForBlock(&(p->data));
-		if (strcmp((char *)hash, (char *)p->data.currHash) != 0)
-		{
-			printf("Corruption found in block %d\n", p->data.index);
-		}
-		free(hash);
 		q = p;
 		p = p->next;
 	}
-
 	printf("BlockChain Verification Successful\n");
 	return;
 }
@@ -696,122 +687,119 @@ void mergeSort(Info *info, int left, int right)
 	}
 }
 
-// Searchs
-int findFirstIndex(Info transactions[], int size, const char *senderID)
-{
-	int left = 0, right = size - 1;
-	int result = -1;
-	while (left <= right)
+	// Searchs
+	int findFirstIndex(Info transactions[], int size, const char *senderID)
 	{
-		int mid = left + (right - left) / 2;
-		if (strcmp(transactions[mid].senderID, senderID) == 0)
+		int left = 0, right = size - 1;
+		int result = -1;
+		while (left <= right)
 		{
-			result = mid;	
-			right = mid - 1;
+			int mid = left + (right - left) / 2;
+			if (strcmp(transactions[mid].senderID, senderID) == 0)
+			{
+				result = mid;	
+				right = mid - 1;
+			}
+			else if (strcmp(transactions[mid].senderID, senderID) < 0)
+			{
+				left = mid + 1;
+			}
+			else
+			{
+				right = mid - 1;
+			}
 		}
-		else if (strcmp(transactions[mid].senderID, senderID) < 0)
-		{
-			left = mid + 1;
-		}
-		else
-		{
-			right = mid - 1;
-		}
+		return result;
 	}
-	return result;
-}
 
-void insertInSHashTable(int index, int numTxn, Info transactions[], HashTable *table)
-{
-	while (index < numTxn && strcmp(transactions[index].senderID, NODE_PUBLIC_ID) == 0)
+	void insertInSHashTable(int index, int numTxn, Info transactions[], HashTable *table)
 	{
-		insertTxnInfo(table, transactions, index);
-		index++;
-	}
-	return;
-}
-
-void insertInRHashTable(int numTxn, Info transactions[], HashTable *table){
-	int index = 0;
-	while(index < numTxn) {
-		if(strcmp(transactions[index].receiverID, NODE_PUBLIC_ID) == 0)
-		insertTxnInfo(table, transactions, index);
-		index++;
-	}
-	return;
-}
-
-/* Inserts Transaction information with array index i
- * parameters passed are hash table pointer, pointer to info
- * index of the array info to be inserted.
- */
-void insertTxnInfo(HashTable *table, Info *info, int i)
-{
-	unsigned int index = generateSHash(info[i].tnx);
-	HashNode *newNode = (HashNode *)malloc(sizeof(HashNode));
-	if (!newNode)
-	{
-		perror("Failed to generate allocate memory.\n");
+		while (index < numTxn && strcmp(transactions[index].senderID, NODE_PUBLIC_ID) == 0)
+		{
+			insertTxnInfo(table, transactions, index);
+			index++;
+		}
 		return;
 	}
 
-	newNode->data = &info[i];
-	newNode->next = table->buckets[index];
-	table->buckets[index] = newNode;
-	return;
-}
-
-/*Hash function for search transactions*/
-unsigned int generateSHash(const char *txnID)
-{
-	unsigned long hash = 0xcbf29ce484222325;	   
-	unsigned long primeMultiplier = 0x100000001b3; 
-	int i;
-	for (i = 4; txnID[i] != '\0' && i < TNX_SIZE; i++)
-	{
-		unsigned char c;
-		if (isdigit(txnID[i]))
-		{
-			c = (unsigned char)(txnID[i] - '0');
+	void insertInRHashTable(int numTxn, Info transactions[], HashTable *table){
+		int index = 0;
+		while(index < numTxn) {
+			if(strcmp(transactions[index].receiverID, NODE_PUBLIC_ID) == 0)
+			insertTxnInfo(table, transactions, index);
+			index++;
 		}
-		else if (isalpha(txnID[i]))
-		{
-			c = (unsigned char)(toupper(txnID[i]) - 'A' + 10);
-		}
-		else
-		{
-			continue;
-		}
-
-		hash = hash ^ c;
-		hash = (hash * primeMultiplier) % TABLE_SIZE; 
+		return;
 	}
 
-	
-	hash ^= (hash >> 33);
-	hash *= primeMultiplier;
-	hash ^= (hash >> 33);
-
-	hash = hash % TABLE_SIZE; 
-	return (unsigned int)hash;
-}
-
-/*Search Transaction with respect to sender ID*/
-Info *searchSHashTable(HashTable *table, const char *txnID)
-{
-	unsigned int index = generateSHash(txnID);
-	HashNode *current = table->buckets[index];
-
-	while (current)
+	void insertTxnInfo(HashTable *table, Info *info, int i)
 	{
-		if (strcmp(current->data->tnx, txnID) == 0)
+		unsigned int index = generateSHash(info[i].tnx);
+		HashNode *newNode = (HashNode *)malloc(sizeof(HashNode));
+		if (!newNode)
 		{
-			return current->data;
+			perror("Failed to generate allocate memory.\n");
+			return;
 		}
-		current = current->next;
+
+		newNode->data = &info[i];
+		newNode->next = table->buckets[index];
+		table->buckets[index] = newNode;
+		return;
 	}
-	return NULL;
-}
+
+	unsigned int generateSHash(const char *txnID)
+	{
+		unsigned long hash = 0xcbf29ce484222325;	   
+		unsigned long primeMultiplier = 0x100000001b3; 
+		int i;
+		for (i = 4; txnID[i] != '\0' && i < TNX_SIZE; i++)
+		{
+			unsigned char c;
+			if (isdigit(txnID[i]))
+			{
+				c = (unsigned char)(txnID[i] - '0');
+			}
+			else if (isalpha(txnID[i]))
+			{
+				c = (unsigned char)(toupper(txnID[i]) - 'A' + 10);
+			}
+			else
+			{
+				continue;
+			}
+
+			hash = hash ^ c;
+			hash = (hash * primeMultiplier) % TABLE_SIZE; 
+		}
+
+		
+		hash ^= (hash >> 33);
+		hash *= primeMultiplier;
+		hash ^= (hash >> 33);
+
+		hash = hash % TABLE_SIZE; 
+		return (unsigned int)hash;
+	}
+
+	Info *searchSHashTable(HashTable *table, const char *txnID)
+	{
+		unsigned int index = generateSHash(txnID);
+		HashNode *current = table->buckets[index];
+
+		while (current)
+		{
+			printf("%s\n", current->data->tnx);
+			printf("%s\n", txnID);
+			if (strcmp(current->data->tnx, txnID) == 0)
+			{
+				printf("yes\n");
+				return current->data;
+			}
+			current = current->next;
+		}
+		return NULL;
+	}
 
 /* Print Transaction information
  * Info struct is provided
