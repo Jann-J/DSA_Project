@@ -1,5 +1,6 @@
 #include "header.h"
 #define BLOCK_NAME_SIZE 20
+static int receiveBlockIndx = 1;
 
 // Struct to store arguments for the receive thread
 ThreadArguments *StoreReceiveThreadArgs(int server_fd, int blockIndx)
@@ -177,10 +178,9 @@ void write_file(int client_socket_fd, int blockIndx)
 {
     char ServerBlock[BLOCK_NAME_SIZE];
 
-    // Updtae Block Name in server side
-    snprintf(ServerBlock, BLOCK_NAME_SIZE, "Block%d.csv", blockIndx);
-
-    printf("%s ", ServerBlock);
+    // Update Block Name in server side
+    snprintf(ServerBlock, BLOCK_NAME_SIZE, "Block%d.csv", receiveBlockIndx);
+    receiveBlockIndx++;
 
     FILE *fp = fopen(ServerBlock, "w");
     if (fp == NULL)

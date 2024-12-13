@@ -32,10 +32,10 @@ void ProfileMenu()
 
 int main()
 {
-	/*while(1){
+	while(1){
 		if(isAuthenticated())
 			break;
-	}*/	
+	}
 
 	static int blockIndx = 1;
 
@@ -84,7 +84,7 @@ int main()
 			updateBalance(data->info, data->NumOfTxn);
 			AddBlock(&chain, data);
 
-			i = findFirstIndex(data->info, data->NumOfTxn, "public-id-0001");
+			i = findFirstIndex(data->info, data->NumOfTxn, "-id-0001");
 			if(i == -1) ;
 			else 
 				insertInSHashTable(i, data->NumOfTxn, data->info, &Stable);

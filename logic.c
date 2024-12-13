@@ -145,6 +145,11 @@ BlockData *ReadFile(char *filename)
 	return blockData;
 }
 
+void printfBlockData( BlockData* blockData)
+{
+	printf("%d %d %d ", blockData->index, blockData->nonce, blockData->NumOfTxn);
+}
+
 void AddBlock(Blockchain *chain, BlockData *blockData)
 {
 	block *newBlock = (block *)malloc(sizeof(block));
@@ -178,10 +183,13 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 		newBlock->data.index = 1;
 
 		printf("Mining...\n\n");
-		Mineblock(blockData);
+
+		// printfBlockData(blockData);
+
+		Mineblock(&newBlock->data);
 		printf("Mining Completed.\n\nBlock is Valid.\n");
 
-		memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
+		// memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
 
 		// newBlock->data.nonce = blockData->nonce;
 		chain->head = newBlock;
@@ -194,11 +202,13 @@ void AddBlock(Blockchain *chain, BlockData *blockData)
 	
 	newBlock->data.index = chain->rear->data.index + 1;
 	
+	// printfBlockData(blockData);
+
 	printf("Mining...\n\n");
-	Mineblock(blockData);
+	Mineblock(&newBlock->data);
 	printf("Mining Completed.\n\nBlock is Valid.\n\n");
 	
-	memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
+	// memcpy(newBlock->data.currHash, blockData->currHash, SHA256_DIGEST_LENGTH);
 
 	newBlock->data.nonce = blockData->nonce;
 
@@ -246,7 +256,6 @@ void Mineblock(BlockData *blockData)
 // Checking the hash is valid or not according to difficulty/
 int isHashValid(unsigned char *hash)
 {
-	
 	for(int i = 0; i < DIFFICULTY; i++) {
 		if(hash[i] == 0) {
 			continue;
@@ -257,7 +266,6 @@ int isHashValid(unsigned char *hash)
 	}
 	return 1;
 }
-
 
 int validateDup(Blockchain chain, unsigned char *merkleRoot){
 	block *p = chain.head;
@@ -279,7 +287,7 @@ int validateDup(Blockchain chain, unsigned char *merkleRoot){
 unsigned char *calculateHashForBlock(BlockData *blockData)
 {
 	char record[256];
-	snprintf(record, sizeof(record), "%u%ld%s%s%u", blockData->index,blockData->timestamp, blockData->prevHash, blockData->merkleRoot, blockData->nonce);
+	snprintf(record, sizeof(record), "%u%s%s%u", blockData->index, blockData->prevHash, blockData->merkleRoot, blockData->nonce);
 	unsigned char *outputhash = (unsigned char *)malloc(sizeof(unsigned char) * SHA256_DIGEST_LENGTH);
 	computeSHA256((const char *)record, outputhash);
 	return outputhash;
